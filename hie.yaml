@@ -1,0 +1,13 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "vcs-ignore:lib"
+
+    - path: "./app/Main.hs"
+      component: "vcs-ignore:exe:ignore"
+
+    - path: "./app/Paths_vcs_ignore.hs"
+      component: "vcs-ignore:exe:ignore"
+
+    - path: "./test"
+      component: "vcs-ignore:test:spec"

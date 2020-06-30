@@ -1,0 +1,64 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: a6a1d8debab9cbc242e7a59dbd06ed087889bd0fada538e81e880ba02a32d4c7
+
+name:           vcs-ignore
+version:        0.0.1.0
+description:    Please see the README on GitHub at <https://github.com/vaclavsvejcar/vcs-ignore#readme>
+homepage:       https://github.com/vaclavsvejcar/headroom#readme
+bug-reports:    https://github.com/vaclavsvejcar/headroom/issues
+author:         Vaclav Svejcar
+maintainer:     vaclav.svejcar@gmail.com
+copyright:      Copyright (c) 2020 Vaclav Svejcar
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/vaclavsvejcar/headroom
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_vcs_ignore
+  hs-source-dirs:
+      src
+  ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable ignore
+  main-is: Main.hs
+  other-modules:
+      Paths_vcs_ignore
+  hs-source-dirs:
+      app
+  ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , vcs-ignore
+  default-language: Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_vcs_ignore
+  hs-source-dirs:
+      test
+  ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , hspec
+    , vcs-ignore
+  default-language: Haskell2010

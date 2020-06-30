@@ -1,0 +1,53 @@
+name: vcs-ignore
+version: 0.0.1.0
+github: vaclavsvejcar/headroom
+license: BSD3
+author: Vaclav Svejcar
+maintainer: vaclav.svejcar@gmail.com
+copyright: Copyright (c) 2020 Vaclav Svejcar
+
+extra-source-files:
+  - README.md
+  - CHANGELOG.md
+
+description: Please see the README on GitHub at <https://github.com/vaclavsvejcar/vcs-ignore#readme>
+
+dependencies:
+  - base >= 4.7 && < 5
+
+ghc-options:
+  - -optP-Wno-nonportable-include-path
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wpartial-fields
+  - -Wredundant-constraints
+  - -Werror=incomplete-patterns
+
+library:
+  source-dirs: src
+
+executables:
+  ignore:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - vcs-ignore
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - hspec
+      - vcs-ignore
