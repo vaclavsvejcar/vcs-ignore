@@ -14,6 +14,7 @@ description: Please see the README on GitHub at <https://github.com/vaclavsvejca
 
 dependencies:
   - base >= 4.7 && < 5
+  - text
 
 ghc-options:
   - -optP-Wno-nonportable-include-path
@@ -28,6 +29,11 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+    - directory
+    - filepath
+    - exceptions
+    - Glob
 
 executables:
   ignore:
