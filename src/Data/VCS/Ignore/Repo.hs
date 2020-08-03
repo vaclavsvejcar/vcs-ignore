@@ -1,4 +1,9 @@
-module Data.VCS.Ignore.Repo where
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
+module Data.VCS.Ignore.Repo
+  ( Repo(..)
+  )
+where
 
 import           Control.Monad.Catch            ( MonadThrow )
 import           Control.Monad.IO.Class         ( MonadIO )
@@ -6,6 +11,9 @@ import           Control.Monad.IO.Class         ( MonadIO )
 
 class Repo r where
 
+  repoPath :: FilePath
+
   scanRepo :: (MonadIO m, MonadThrow m) => FilePath -> m r
 
-  isIgnored :: r -> FilePath -> Bool
+  isExcluded :: r -> FilePath -> Bool
+

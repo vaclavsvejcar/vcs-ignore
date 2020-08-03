@@ -4,31 +4,46 @@ module Data.VCS.Ignore.FileSystemSpec
 where
 
 import qualified Data.List                     as L
+import           Data.Maybe                     ( catMaybes )
 import           Data.VCS.Ignore.FileSystem
 import           Test.Hspec
 
 
 spec :: Spec
 spec = do
-  describe "findFiles" $ do
-    it "recursively finds files filtered by given predicate" $ do
+  describe "findPaths" $ do
+    it "recursively finds paths filtered by given predicate" $ do
       let expected  = ["test-data/list-files/dir1/dir2/d.xml"]
           predicate = ("d.xml" `L.isSuffixOf`)
-      files <- findFiles "test-data/list-files/" predicate
-      files `shouldBe` expected
+      result <- findPaths "test-data/list-files" predicate
+      result `shouldBe` expected
 
 
-  describe "listFiles" $ do
+  describe "listPaths" $ do
     it "returns empty list if path doesn't exist" $ do
-      filePaths <- listFiles "non-existing-path"
+      filePaths <- listPaths "non-existing-path"
       filePaths `shouldBe` []
 
-    it "recursively finds all files in directory" $ do
-      filePaths <- listFiles "test-data/list-files/"
+    it "recursively finds all paths in directory" $ do
+      result <- listPaths "test-data/list-files"
       let expected =
-            [ "test-data/list-files/a.txt"
+            [ "test-data/list-files"
+            , "test-data/list-files/a.txt"
+            , "test-data/list-files/dir1"
             , "test-data/list-files/dir1/b.txt"
+            , "test-data/list-files/dir1/dir2"
             , "test-data/list-files/dir1/dir2/c.txt"
             , "test-data/list-files/dir1/dir2/d.xml"
             ]
-      L.sort filePaths `shouldBe` L.sort expected
+      L.sort result `shouldBe` L.sort expected
+
+  describe "walkPaths" $ do
+    it "recursively traverses and processes paths in directory" $ do
+      let fn path = if ".txt" `L.isSuffixOf` path then Just path else Nothing
+          expected =
+            [ "test-data/list-files/a.txt"
+            , "test-data/list-files/dir1/b.txt"
+            , "test-data/list-files/dir1/dir2/c.txt"
+            ]
+      actual <- catMaybes <$> walkPaths "test-data/list-files" fn
+      L.sort actual `shouldBe` L.sort expected

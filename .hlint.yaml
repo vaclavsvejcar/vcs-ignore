@@ -35,6 +35,7 @@
 #
 # Ban "module X(module X) where", to require a real export list
 - warn: { name: Use explicit module export list }
+- warn: { lhs: "undefined", rhs: undefined, name: Realisation is required }
 #
 # Replace a $ b $ c with a . b $ c
 - group: { name: dollar, enabled: true }
