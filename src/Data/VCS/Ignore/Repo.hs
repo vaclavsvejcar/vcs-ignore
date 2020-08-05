@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Data.VCS.Ignore.Repo
   ( Repo(..)
   )
@@ -11,7 +9,7 @@ import           Control.Monad.IO.Class         ( MonadIO )
 
 class Repo r where
 
-  repoPath :: FilePath
+  repoPath :: r -> FilePath
 
   scanRepo :: (MonadIO m, MonadThrow m) => FilePath -> m r
 

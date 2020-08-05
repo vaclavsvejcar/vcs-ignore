@@ -55,5 +55,6 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - filepath
       - hspec
       - vcs-ignore

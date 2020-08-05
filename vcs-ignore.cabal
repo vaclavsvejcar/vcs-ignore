@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ca69036a93e25e3c71cf005316bbb681b298d2de5698006de0b119621b0d29ee
+-- hash: 5328c1b0827456462313d0c00c9ccf2ea9c1f375b7d740965618b38fbb1c1899
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -64,6 +64,7 @@ test-suite spec
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Data.VCS.Ignore.CoreSpec
       Data.VCS.Ignore.FileSystemSpec
       Paths_vcs_ignore
   hs-source-dirs:
@@ -71,6 +72,7 @@ test-suite spec
   ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , filepath
     , hspec
     , text
     , vcs-ignore
