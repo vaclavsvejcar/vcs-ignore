@@ -21,14 +21,14 @@ spec = do
 
   describe "listRepo" $ do
     it "lists repository paths, based on the search filter" $ do
-      let searchFilter = defaultSearchFilter
+      let pathFilter = mempty
           expected =
             [ testRepoPath
             , testRepoPath </> "file1.txt"
             , testRepoPath </> "file2.txt"
             ]
       repo   <- scanRepo @TestRepo testRepoPath
-      result <- listRepo repo searchFilter
+      result <- listRepo repo pathFilter
       L.sort result `shouldBe` L.sort expected
 
 

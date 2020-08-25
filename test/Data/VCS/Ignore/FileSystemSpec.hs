@@ -14,7 +14,7 @@ spec = do
   describe "findPaths" $ do
     it "recursively finds paths filtered by given predicate" $ do
       let expected  = ["test-data/list-files/dir1/dir2/d.xml"]
-          predicate = ("d.xml" `L.isSuffixOf`)
+          predicate = pure <$> ("d.xml" `L.isSuffixOf`)
       result <- findPaths "test-data/list-files" predicate
       result `shouldBe` expected
 
@@ -39,11 +39,13 @@ spec = do
 
   describe "walkPaths" $ do
     it "recursively traverses and processes paths in directory" $ do
-      let fn path = if ".txt" `L.isSuffixOf` path then Just path else Nothing
-          expected =
-            [ "test-data/list-files/a.txt"
-            , "test-data/list-files/dir1/b.txt"
-            , "test-data/list-files/dir1/dir2/c.txt"
-            ]
+      let
+        fn path =
+          if ".txt" `L.isSuffixOf` path then pure $ Just path else pure Nothing
+        expected =
+          [ "test-data/list-files/a.txt"
+          , "test-data/list-files/dir1/b.txt"
+          , "test-data/list-files/dir1/dir2/c.txt"
+          ]
       actual <- catMaybes <$> walkPaths "test-data/list-files" fn
       L.sort actual `shouldBe` L.sort expected

@@ -27,7 +27,7 @@ newtype PathFilter = PathFilter
   }
 
 instance Semigroup PathFilter where
-  PathFilter pf1 <> PathFilter pf2 = PathFilter $ pf1 >=> pf2
+  PathFilter x <> PathFilter y = PathFilter $ x >=> y
 
 instance Monoid PathFilter where
   mempty = PathFilter $ \input -> pure input
