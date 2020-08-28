@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE RecordWildCards  #-}
 {-# LANGUAGE StrictData       #-}
 {-# LANGUAGE TypeApplications #-}
@@ -8,8 +9,10 @@ module Data.VCS.Ignore.CoreSpec
 where
 
 import qualified Data.List                     as L
-import           Data.Maybe                     ( catMaybes )
 import           Data.VCS.Ignore.Core
+import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
+                                                , notMatched
+                                                )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
@@ -34,7 +37,11 @@ spec = do
 
   describe "walkRepo" $ do
     it "walks repository paths, based on the search filter" $ do
-      pending
+      let pathFilter = excludeFile2
+          expected   = [testRepoPath, testRepoPath </> "file1.txt"]
+      repo   <- scanRepo @TestRepo testRepoPath
+      result <- listRepo repo pathFilter
+      L.sort result `shouldBe` L.sort expected
 
 
 data TestRepo = TestRepo
@@ -48,3 +55,11 @@ instance Repo TestRepo where
   scanRepo path = pure TestRepo { trPath = path }
 
   isExcluded _ path = "excluded.txt" `L.isSuffixOf` path
+
+
+excludeFile2 :: PathFilter
+excludeFile2 = PathFilter $ \case
+  path | "file2.txt" `L.isSuffixOf` path -> notMatched path
+  path -> pure path
+
+

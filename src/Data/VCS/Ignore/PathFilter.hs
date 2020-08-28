@@ -2,7 +2,12 @@
 {-# LANGUAGE StrictData #-}
 
 
-module Data.VCS.Ignore.PathFilter where
+module Data.VCS.Ignore.PathFilter
+  ( PathNotMatched(..)
+  , PathFilter(..)
+  , notMatched
+  )
+where
 
 import           Control.Monad                  ( (>=>) )
 import           Control.Monad.Catch            ( Exception(..)
@@ -10,16 +15,15 @@ import           Control.Monad.Catch            ( Exception(..)
                                                 , throwM
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO )
-import           Data.Text                      ( Text )
-import qualified Data.Text                     as T
 
 
-data FilterNotMatched = FilterNotMatched FilePath Text
+data PathNotMatched = PathNotMatched FilePath
   deriving Show
 
-instance Exception FilterNotMatched where
-  displayException (FilterNotMatched path reason) =
-    mconcat ["Path '", path, "' not matched, reason: ", T.unpack reason]
+
+instance Exception PathNotMatched where
+  displayException (PathNotMatched path) =
+    mconcat ["Path '", path, "' not matched"]
 
 
 newtype PathFilter = PathFilter
@@ -33,8 +37,6 @@ instance Monoid PathFilter where
   mempty = PathFilter $ \input -> pure input
 
 
-notMatched :: MonadThrow m => FilePath -> Text -> m a
-notMatched path reason = throwM (FilterNotMatched path reason)
-
-
+notMatched :: MonadThrow m => FilePath -> m a
+notMatched path = throwM (PathNotMatched path)
 
