@@ -30,6 +30,7 @@ ghc-options:
 library:
   source-dirs: src
   dependencies:
+    - containers
     - directory
     - filepath
     - exceptions
