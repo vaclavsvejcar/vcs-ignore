@@ -22,7 +22,7 @@ walkRepo :: (MonadIO m, Repo r) => r -> PathFilter -> (FilePath -> m a) -> m [a]
 walkRepo repo (PathFilter filterFn) fn = do
   let search path | isExcluded repo path = pure Nothing
                   | otherwise            = applyFilter path >>= mapM fn
-  catMaybes <$> walkPaths (repoPath repo) search
+  catMaybes <$> walkPaths (repoRoot repo) search
  where
   applyFilter path = liftIO $ catch
     (Just <$> filterFn path)

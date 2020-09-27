@@ -24,7 +24,7 @@ import           System.IO.Error                ( tryIOError )
 
 data Git = Git
   { gitIgnoredPatterns :: Map FilePath [String]
-  , gitRepoPath        :: FilePath
+  , gitRepoRoot        :: FilePath
   }
   deriving (Eq, Show)
 
@@ -73,4 +73,4 @@ scanRepo' globalGitIgnoreFn repoGitIgnoreFn dotGitIgnoresFn repoDir = do
   repoGitIgnore' <- ignoredPatterns (Just "/") $ repoGitIgnoreFn repoDir
   globalIgnore'  <- globalGitIgnoreFn >>= ignoredPatterns (Just "/")
   let patterns = [globalIgnore'] <> [repoGitIgnore'] <> dotGitIgnores'
-  pure $ Git { gitIgnoredPatterns = M.fromList patterns, gitRepoPath = repoDir }
+  pure $ Git { gitIgnoredPatterns = M.fromList patterns, gitRepoRoot = repoDir }

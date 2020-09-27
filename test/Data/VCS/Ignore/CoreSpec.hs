@@ -20,17 +20,17 @@ import           Test.Hspec
 
 spec :: Spec
 spec = do
-  let testRepoPath = "test-data" </> "test-repo"
+  let testRepoRoot = "test-data" </> "test-repo"
 
   describe "listRepo" $ do
     it "lists repository paths, based on the search filter" $ do
       let pathFilter = mempty
           expected =
-            [ testRepoPath
-            , testRepoPath </> "file1.txt"
-            , testRepoPath </> "file2.txt"
+            [ testRepoRoot
+            , testRepoRoot </> "file1.txt"
+            , testRepoRoot </> "file2.txt"
             ]
-      repo   <- scanRepo @TestRepo testRepoPath
+      repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo pathFilter
       L.sort result `shouldBe` L.sort expected
 
@@ -38,8 +38,8 @@ spec = do
   describe "walkRepo" $ do
     it "walks repository paths, based on the search filter" $ do
       let pathFilter = excludeFile2
-          expected   = [testRepoPath, testRepoPath </> "file1.txt"]
-      repo   <- scanRepo @TestRepo testRepoPath
+          expected   = [testRepoRoot, testRepoRoot </> "file1.txt"]
+      repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo pathFilter
       L.sort result `shouldBe` L.sort expected
 
@@ -50,7 +50,7 @@ data TestRepo = TestRepo
   deriving (Eq, Show)
 
 instance Repo TestRepo where
-  repoPath TestRepo {..} = trPath
+  repoRoot TestRepo {..} = trPath
 
   scanRepo path = pure TestRepo { trPath = path }
 

@@ -65,7 +65,7 @@ spec = do
                                      , ["*.txt"]
                                      )
                                    ]
-          , gitRepoPath        = repo
+          , gitRepoRoot        = repo
           }
         ne = "non-existent"
       result <- scanRepo' (pure ne) (const ne) dotGitIgnores repo

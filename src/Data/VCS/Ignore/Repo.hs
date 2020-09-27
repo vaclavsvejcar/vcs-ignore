@@ -9,7 +9,7 @@ import           Control.Monad.IO.Class         ( MonadIO )
 
 class Repo r where
 
-  repoPath :: r -> FilePath
+  repoRoot :: r -> FilePath
 
   scanRepo :: (MonadIO m, MonadThrow m) => FilePath -> m r
 
