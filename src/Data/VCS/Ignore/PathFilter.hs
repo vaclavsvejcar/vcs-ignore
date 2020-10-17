@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE StrictData #-}
 
-
 module Data.VCS.Ignore.PathFilter
   ( PathNotMatched(..)
   , PathFilter(..)
