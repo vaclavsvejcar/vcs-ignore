@@ -14,19 +14,22 @@ import           Control.Monad.Catch            ( Exception(..)
                                                 , throwM
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO )
+import           Data.VCS.Ignore.RepoPath       ( RepoPath
+                                                , toRelativePath
+                                                )
 
 
-data PathNotMatched = PathNotMatched FilePath
+data PathNotMatched = PathNotMatched RepoPath
   deriving Show
 
 
 instance Exception PathNotMatched where
   displayException (PathNotMatched path) =
-    mconcat ["Path '", path, "' not matched"]
+    mconcat ["Path '", toRelativePath path, "' not matched"]
 
 
 newtype PathFilter = PathFilter
-  { unPathFilter :: forall m. (MonadIO m, MonadThrow m) => FilePath -> m FilePath
+  { unPathFilter :: forall m. (MonadIO m, MonadThrow m) => RepoPath -> m RepoPath
   }
 
 instance Semigroup PathFilter where
@@ -36,6 +39,6 @@ instance Monoid PathFilter where
   mempty = PathFilter $ \input -> pure input
 
 
-notMatched :: MonadThrow m => FilePath -> m a
+notMatched :: MonadThrow m => RepoPath -> m a
 notMatched path = throwM (PathNotMatched path)
 

@@ -1,7 +1,6 @@
 {-# LANGUAGE StrictData #-}
 module Data.VCS.Ignore.Repo.Git where
 
-import           Control.Monad.Catch            ( MonadThrow )
 import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
                                                 )

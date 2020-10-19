@@ -5,6 +5,7 @@ where
 
 import           Control.Monad.Catch            ( MonadThrow )
 import           Control.Monad.IO.Class         ( MonadIO )
+import           Data.VCS.Ignore.RepoPath       ( RepoPath )
 
 
 class Repo r where
@@ -13,5 +14,5 @@ class Repo r where
 
   scanRepo :: (MonadIO m, MonadThrow m) => FilePath -> m r
 
-  isExcluded :: r -> FilePath -> Bool
+  isExcluded :: r -> RepoPath -> Bool
 
