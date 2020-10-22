@@ -16,7 +16,7 @@ import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
                                                 )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath
-                                                , fromRelativePath
+                                                , fromFilePath
                                                 )
 
 
@@ -30,7 +30,7 @@ walkRepo repo (PathFilter filterFn) fn = do
                   | otherwise            = applyFilter path >>= mapM fn
   catMaybes <$> walkPaths (repoRoot repo) (search . relativePath)
  where
-  relativePath = fromRelativePath . dropPrefix (repoRoot repo)
+  relativePath = fromFilePath . dropPrefix (repoRoot repo)
   dropPrefix prefix t = fromMaybe t (L.stripPrefix prefix t)
   applyFilter path = liftIO $ catch
     (Just <$> filterFn path)

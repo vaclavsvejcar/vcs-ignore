@@ -12,9 +12,17 @@ import           Test.Hspec
 spec :: Spec
 spec = do
 
-  describe "fromRelativePath" $ do
+  describe "fromFilePath" $ do
     it "creates RepoPath from valid path relative to the repository" $ do
       let sample   = "some/repo/path.txt"
           expected = RepoPath ["some", "repo", "path.txt"]
-      fromRelativePath sample `shouldBe` expected
+      fromFilePath sample `shouldBe` expected
+
+
+  describe "toRelativePath" $ do
+    it "creates RepoPath from valid path relative to the repository" $ do
+      let sample   = RepoPath ["some", "repo", "path.txt"]
+          expected = "some/repo/path.txt"
+      toFilePath sample `shouldBe` expected
+
 

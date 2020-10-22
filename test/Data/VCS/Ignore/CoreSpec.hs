@@ -16,7 +16,7 @@ import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
                                                 )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath(..)
-                                                , toRelativePath
+                                                , toFilePath
                                                 )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
@@ -71,12 +71,12 @@ instance Repo TestRepo where
 
   scanRepo path = pure TestRepo { trPath = path }
 
-  isExcluded _ path = "excluded.txt" `L.isSuffixOf` toRelativePath path
+  isExcluded _ path = "excluded.txt" `L.isSuffixOf` toFilePath path
 
 
 excludeFile2 :: PathFilter
 excludeFile2 = PathFilter $ \case
-  path | "test-b.txt" `L.isSuffixOf` toRelativePath path -> notMatched path
+  path | "test-b.txt" `L.isSuffixOf` toFilePath path -> notMatched path
   path -> pure path
 
 

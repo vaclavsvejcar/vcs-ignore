@@ -3,8 +3,8 @@
 
 module Data.VCS.Ignore.RepoPath
   ( RepoPath(..)
-  , fromRelativePath
-  , toRelativePath
+  , fromFilePath
+  , toFilePath
   , root
   )
 where
@@ -25,12 +25,12 @@ instance Semigroup RepoPath where
 
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
 
-fromRelativePath :: FilePath -> RepoPath
-fromRelativePath = RepoPath . T.splitOn "/" . T.replace "\\" "/" . T.pack
+fromFilePath :: FilePath -> RepoPath
+fromFilePath = RepoPath . T.splitOn "/" . T.replace "\\" "/" . T.pack
 
 
-toRelativePath :: RepoPath -> FilePath
-toRelativePath (RepoPath chunks) =
+toFilePath :: RepoPath -> FilePath
+toFilePath (RepoPath chunks) =
   L.intercalate [pathSeparator] (T.unpack <$> chunks)
 
 

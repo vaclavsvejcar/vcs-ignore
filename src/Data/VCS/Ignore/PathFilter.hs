@@ -15,7 +15,7 @@ import           Control.Monad.Catch            ( Exception(..)
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath
-                                                , toRelativePath
+                                                , toFilePath
                                                 )
 
 
@@ -25,7 +25,7 @@ data PathNotMatched = PathNotMatched RepoPath
 
 instance Exception PathNotMatched where
   displayException (PathNotMatched path) =
-    mconcat ["Path '", toRelativePath path, "' not matched"]
+    mconcat ["Path '", toFilePath path, "' not matched"]
 
 
 newtype PathFilter = PathFilter
