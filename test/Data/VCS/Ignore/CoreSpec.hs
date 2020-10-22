@@ -10,7 +10,6 @@ module Data.VCS.Ignore.CoreSpec
 where
 
 import qualified Data.List                     as L
-import           Data.List.NonEmpty             ( NonEmpty(..) )
 import           Data.VCS.Ignore.Core
 import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
                                                 , notMatched
@@ -25,22 +24,38 @@ import           Test.Hspec
 
 spec :: Spec
 spec = do
-  let testRepoRoot = "test-data" </> "test-repo"
+  let testRepoRoot = "test-data" </> "fake-git-repo"
 
   describe "listRepo" $ do
     it "lists repository paths, based on the search filter" $ do
       let pathFilter = mempty
           expected =
-            [RepoPath $ "file1.txt" :| [], RepoPath $ "file2.txt" :| []]
+            [ RepoPath [""]
+            , RepoPath ["", "a"]
+            , RepoPath ["", "a", ".gitignore"]
+            , RepoPath ["", "a", "b"]
+            , RepoPath ["", "a", "b", ".gitignore"]
+            , RepoPath ["", "a", "b", "test-b.txt"]
+            , RepoPath ["", "a", "b", "test-b.xml"]
+            , RepoPath ["", "a", "test-a.txt"]
+            , RepoPath ["", "a", "test-a.xml"]
+            ]
       repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo pathFilter
       L.sort result `shouldBe` L.sort expected
 
-
-  describe "walkRepo" $ do
     it "walks repository paths, based on the search filter" $ do
       let pathFilter = excludeFile2
-          expected   = [RepoPath $ "file1.txt" :| []]
+          expected =
+            [ RepoPath [""]
+            , RepoPath ["", "a"]
+            , RepoPath ["", "a", ".gitignore"]
+            , RepoPath ["", "a", "b"]
+            , RepoPath ["", "a", "b", ".gitignore"]
+            , RepoPath ["", "a", "b", "test-b.xml"]
+            , RepoPath ["", "a", "test-a.txt"]
+            , RepoPath ["", "a", "test-a.xml"]
+            ]
       repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo pathFilter
       L.sort result `shouldBe` L.sort expected
@@ -61,7 +76,7 @@ instance Repo TestRepo where
 
 excludeFile2 :: PathFilter
 excludeFile2 = PathFilter $ \case
-  path | "file2.txt" `L.isSuffixOf` toRelativePath path -> notMatched path
+  path | "test-b.txt" `L.isSuffixOf` toRelativePath path -> notMatched path
   path -> pure path
 
 

@@ -3,19 +3,13 @@
 
 module Data.VCS.Ignore.RepoPath
   ( RepoPath(..)
-  , InvalidRepoPath(..)
   , fromRelativePath
   , toRelativePath
+  , root
   )
 where
 
-import           Control.Monad.Catch            ( Exception(..)
-                                                , MonadThrow
-                                                , throwM
-                                                )
 import qualified Data.List                     as L
-import           Data.List.NonEmpty             ( NonEmpty(..) )
-import qualified Data.List.NonEmpty            as NEL
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import           System.FilePath                ( pathSeparator )
@@ -23,14 +17,7 @@ import           System.FilePath                ( pathSeparator )
 
 ---------------------------------  DATA TYPES  ---------------------------------
 
-newtype RepoPath = RepoPath (NonEmpty Text) deriving (Eq, Ord, Show)
-
-data InvalidRepoPath = InvalidRepoPath FilePath
-  deriving Show
-
-instance Exception InvalidRepoPath where
-  displayException (InvalidRepoPath path) =
-    mconcat ["Cannot parse path '", path, "' into RepoPath"]
+newtype RepoPath = RepoPath [Text] deriving (Eq, Ord, Show)
 
 instance Semigroup RepoPath where
   RepoPath x <> RepoPath y = RepoPath $ x <> y
@@ -38,19 +25,14 @@ instance Semigroup RepoPath where
 
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
 
-fromRelativePath :: MonadThrow m => FilePath -> m RepoPath
-fromRelativePath path = case filter (not . T.null) chunks of
-  (x : xs) -> pure . RepoPath $ (x :| xs)
-  []       -> invalidRepoPath path
-  where chunks = T.splitOn "/" . T.replace "\\" "/" . T.pack $ path
+fromRelativePath :: FilePath -> RepoPath
+fromRelativePath = RepoPath . T.splitOn "/" . T.replace "\\" "/" . T.pack
 
 
 toRelativePath :: RepoPath -> FilePath
 toRelativePath (RepoPath chunks) =
-  L.intercalate [pathSeparator] (T.unpack <$> NEL.toList chunks)
+  L.intercalate [pathSeparator] (T.unpack <$> chunks)
 
 
-------------------------------  PRIVATE FUNCTIONS  -----------------------------
-
-invalidRepoPath :: MonadThrow m => FilePath -> m a
-invalidRepoPath path = throwM $ InvalidRepoPath path
+root :: RepoPath
+root = RepoPath []

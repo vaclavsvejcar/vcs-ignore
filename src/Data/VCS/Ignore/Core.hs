@@ -1,5 +1,4 @@
-{-# LANGUAGE StrictData   #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE StrictData #-}
 
 module Data.VCS.Ignore.Core where
 
@@ -27,11 +26,9 @@ listRepo repo searchFilter = walkRepo repo searchFilter pure
 
 walkRepo :: (MonadIO m, Repo r) => r -> PathFilter -> (RepoPath -> m a) -> m [a]
 walkRepo repo (PathFilter filterFn) fn = do
-  let search (relativePath -> Just path) = process path
-      search _                           = pure Nothing
-      process path | isExcluded repo path = pure Nothing
-                   | otherwise            = applyFilter path >>= mapM fn
-  catMaybes <$> walkPaths (repoRoot repo) search
+  let search path | isExcluded repo path = pure Nothing
+                  | otherwise            = applyFilter path >>= mapM fn
+  catMaybes <$> walkPaths (repoRoot repo) (search . relativePath)
  where
   relativePath = fromRelativePath . dropPrefix (repoRoot repo)
   dropPrefix prefix t = fromMaybe t (L.stripPrefix prefix t)
