@@ -15,9 +15,7 @@ import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
                                                 , notMatched
                                                 )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
-import           Data.VCS.Ignore.RepoPath       ( RepoPath(..)
-                                                , toFilePath
-                                                )
+import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
 
@@ -30,31 +28,31 @@ spec = do
     it "lists repository paths, based on the search filter" $ do
       let pathFilter = mempty
           expected =
-            [ RepoPath [""]
-            , RepoPath ["", "a"]
-            , RepoPath ["", "a", ".gitignore"]
-            , RepoPath ["", "a", "b"]
-            , RepoPath ["", "a", "b", ".gitignore"]
-            , RepoPath ["", "a", "b", "test-b.txt"]
-            , RepoPath ["", "a", "b", "test-b.xml"]
-            , RepoPath ["", "a", "test-a.txt"]
-            , RepoPath ["", "a", "test-a.xml"]
+            [ RepoPath []
+            , RepoPath ["a"]
+            , RepoPath ["a", ".gitignore"]
+            , RepoPath ["a", "b"]
+            , RepoPath ["a", "b", ".gitignore"]
+            , RepoPath ["a", "b", "test-b.txt"]
+            , RepoPath ["a", "b", "test-b.xml"]
+            , RepoPath ["a", "test-a.txt"]
+            , RepoPath ["a", "test-a.xml"]
             ]
       repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo pathFilter
       L.sort result `shouldBe` L.sort expected
 
     it "walks repository paths, based on the search filter" $ do
-      let pathFilter = excludeFile2
+      let pathFilter = testPathFilter
           expected =
-            [ RepoPath [""]
-            , RepoPath ["", "a"]
-            , RepoPath ["", "a", ".gitignore"]
-            , RepoPath ["", "a", "b"]
-            , RepoPath ["", "a", "b", ".gitignore"]
-            , RepoPath ["", "a", "b", "test-b.xml"]
-            , RepoPath ["", "a", "test-a.txt"]
-            , RepoPath ["", "a", "test-a.xml"]
+            [ RepoPath []
+            , RepoPath ["a"]
+            , RepoPath ["a", ".gitignore"]
+            , RepoPath ["a", "b"]
+            , RepoPath ["a", "b", ".gitignore"]
+            , RepoPath ["a", "b", "test-b.xml"]
+            , RepoPath ["a", "test-a.txt"]
+            , RepoPath ["a", "test-a.xml"]
             ]
       repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo pathFilter
@@ -71,12 +69,10 @@ instance Repo TestRepo where
 
   scanRepo path = pure TestRepo { trPath = path }
 
-  isExcluded _ path = "excluded.txt" `L.isSuffixOf` toFilePath path
+  isExcluded _ (RepoPath chunks) = "excluded.txt" `L.elem` chunks
 
 
-excludeFile2 :: PathFilter
-excludeFile2 = PathFilter $ \case
-  path | "test-b.txt" `L.isSuffixOf` toFilePath path -> notMatched path
-  path -> pure path
-
-
+testPathFilter :: PathFilter
+testPathFilter = PathFilter $ \case
+  rp@(RepoPath chunks) | "test-b.txt" `L.elem` chunks -> notMatched rp
+  other -> pure other

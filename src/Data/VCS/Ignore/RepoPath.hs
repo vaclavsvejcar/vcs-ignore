@@ -4,15 +4,12 @@
 module Data.VCS.Ignore.RepoPath
   ( RepoPath(..)
   , fromFilePath
-  , toFilePath
-  , root
   )
 where
 
 import qualified Data.List                     as L
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
-import           System.FilePath                ( pathSeparator )
 
 
 ---------------------------------  DATA TYPES  ---------------------------------
@@ -26,13 +23,7 @@ instance Semigroup RepoPath where
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
 
 fromFilePath :: FilePath -> RepoPath
-fromFilePath = RepoPath . T.splitOn "/" . T.replace "\\" "/" . T.pack
-
-
-toFilePath :: RepoPath -> FilePath
-toFilePath (RepoPath chunks) =
-  L.intercalate [pathSeparator] (T.unpack <$> chunks)
-
-
-root :: RepoPath
-root = RepoPath []
+fromFilePath = RepoPath . chunks
+ where
+  chunks      = filterEmpty . T.splitOn "/" . T.replace "\\" "/" . T.pack
+  filterEmpty = L.filter (not . T.null)
