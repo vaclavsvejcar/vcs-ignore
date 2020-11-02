@@ -8,6 +8,7 @@ where
 import qualified Data.Text                     as T
 import           Data.VCS.Ignore.Repo.Git
 import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
+import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
 
@@ -48,3 +49,17 @@ spec = do
       let expected =
             [(RepoPath ["a"], ["*.xml"]), (RepoPath ["a", "b"], ["*.txt"])]
       loadGitIgnores repo `shouldReturn` expected
+
+
+  describe "scanRepo'" $ do
+    it "scans repository for ignored patterns" $ do
+      let fn1      = pure []
+          fn2      = const $ pure []
+          expected = Git
+            { gitIgnoredPatterns = [ (RP.root            , [])
+                                   , (RepoPath ["a"]     , ["*.xml"])
+                                   , (RepoPath ["a", "b"], ["*.txt"])
+                                   ]
+            , gitRepoRoot        = repo
+            }
+      scanRepo' fn1 fn2 loadGitIgnores repo `shouldReturn` expected

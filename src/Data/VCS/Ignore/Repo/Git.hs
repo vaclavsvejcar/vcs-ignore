@@ -16,6 +16,7 @@ import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
 import           Data.VCS.Ignore.FileSystem     ( findPaths )
+import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath )
 import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.Directory               ( XdgDirectory(XdgConfig)
@@ -25,12 +26,22 @@ import           System.FilePath                ( (</>) )
 import qualified System.FilePath.Glob          as G
 
 
+---------------------------------  DATA TYPES  ---------------------------------
+
 data Git = Git
   { gitIgnoredPatterns :: [(RepoPath, [G.Pattern])]
   , gitRepoRoot        :: FilePath
   }
   deriving (Eq, Show)
 
+
+-- TODO isExcluded
+instance Repo Git where
+  repoRoot = gitRepoRoot
+  scanRepo = scanRepo' loadGlobalPatterns loadRepoPatterns loadGitIgnores
+
+
+------------------------------  PUBLIC FUNCTIONS  ------------------------------
 
 parsePatterns :: Text -> [G.Pattern]
 parsePatterns = fmap (G.compile . T.unpack) . filter (not . excluded) . T.lines
@@ -60,10 +71,26 @@ loadGitIgnores repoDir = do
     $ RP.stripPrefix (RP.fromFilePath repoDir) (RP.fromFilePath p)
 
 
-loadRepoIgnored :: MonadIO m => FilePath -> m [G.Pattern]
-loadRepoIgnored repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
+loadRepoPatterns :: MonadIO m => FilePath -> m [G.Pattern]
+loadRepoPatterns repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
 
 
-loadGlobalIgnored :: MonadIO m => m [G.Pattern]
-loadGlobalIgnored =
+loadGlobalPatterns :: MonadIO m => m [G.Pattern]
+loadGlobalPatterns =
   (liftIO . getXdgDirectory XdgConfig $ ("git" </> "ignore")) >>= loadPatterns
+
+
+scanRepo' :: MonadIO m
+          => m [G.Pattern]
+          -> (FilePath -> m [G.Pattern])
+          -> (FilePath -> m [(RepoPath, [G.Pattern])])
+          -> FilePath
+          -> m Git
+scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn repoDir = do
+  globalPatterns <- globalPatternsFn
+  repoPatterns   <- repoPatternsFn repoDir
+  gitIgnores     <- gitIgnoresFn repoDir
+  let rootPatterns = [(RP.root, globalPatterns <> repoPatterns)]
+  pure Git { gitIgnoredPatterns = rootPatterns <> gitIgnores
+           , gitRepoRoot        = repoDir
+           }
