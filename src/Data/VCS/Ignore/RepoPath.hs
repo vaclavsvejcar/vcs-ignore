@@ -47,8 +47,5 @@ stripPrefix (RepoPath prefix) (RepoPath path) = RepoPath $ path \\ prefix
 
 stripSuffix :: RepoPath -> RepoPath -> RepoPath
 stripSuffix (RepoPath []    ) path            = path
-stripSuffix (RepoPath suffix) (RepoPath path) = RepoPath $ take dropL path
- where
-  dropL   = pathL - suffixL
-  pathL   = length path
-  suffixL = length suffix
+stripSuffix (RepoPath suffix) (RepoPath path) = RepoPath $ take count path
+  where count = length path - length suffix
