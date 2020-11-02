@@ -16,6 +16,7 @@ dependencies:
   - base >= 4.7 && < 5
   - containers
   - exceptions
+  - Glob
   - text
 
 ghc-options:
@@ -34,7 +35,6 @@ library:
   dependencies:
     - directory
     - filepath
-    - Glob
     - text
 
 executables:

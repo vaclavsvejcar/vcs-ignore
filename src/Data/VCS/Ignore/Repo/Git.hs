@@ -1,75 +1,69 @@
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StrictData          #-}
+{-# LANGUAGE TupleSections       #-}
+
 module Data.VCS.Ignore.Repo.Git where
 
+import           Control.Exception              ( SomeException
+                                                , catch
+                                                )
 import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
                                                 )
 import qualified Data.List                     as L
-import           Data.Map                       ( Map )
-import qualified Data.Map                      as M
-import           Data.Maybe                     ( fromMaybe )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
 import           Data.VCS.Ignore.FileSystem     ( findPaths )
-import           Data.VCS.Ignore.Repo           ( Repo(..) )
+import           Data.VCS.Ignore.RepoPath       ( RepoPath )
+import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.Directory               ( XdgDirectory(XdgConfig)
                                                 , getXdgDirectory
                                                 )
 import           System.FilePath                ( (</>) )
-import           System.IO                      ( IOMode(ReadMode)
-                                                , hGetContents
-                                                , openFile
-                                                )
-import           System.IO.Error                ( tryIOError )
+import qualified System.FilePath.Glob          as G
 
 
 data Git = Git
-  { gitIgnoredPatterns :: Map FilePath [String]
+  { gitIgnoredPatterns :: [(RepoPath, [G.Pattern])]
   , gitRepoRoot        :: FilePath
   }
   deriving (Eq, Show)
 
 
-instance Repo Git where
-  scanRepo = scanRepo' globalGitIgnore repoGitIgnore dotGitIgnores
+parsePatterns :: Text -> [G.Pattern]
+parsePatterns = fmap (G.compile . T.unpack) . filter (not . excluded) . T.lines
+ where
+  excluded line = or $ fmap ($ T.stripStart line) [comment, emptyLine]
+  comment line = "#" `T.isPrefixOf` line
+  emptyLine line = T.null line
 
 
-repoGitIgnore :: FilePath -> FilePath
-repoGitIgnore repoDir = repoDir </> "info" </> "exclude"
+loadPatterns :: MonadIO m => FilePath -> m [G.Pattern]
+loadPatterns path = parsePatterns <$> liftIO content
+ where
+  content = catch (T.readFile path) (\(_ :: SomeException) -> pure T.empty)
 
 
-dotGitIgnores :: MonadIO m => FilePath -> m [FilePath]
-dotGitIgnores repoDir = findPaths repoDir isGitIgnore
+findGitIgnores :: MonadIO m => FilePath -> m [FilePath]
+findGitIgnores repoDir = findPaths repoDir isGitIgnore
   where isGitIgnore path = pure $ ".gitignore" `L.isSuffixOf` path
 
 
-globalGitIgnore :: MonadIO m => m FilePath
-globalGitIgnore = liftIO . getXdgDirectory XdgConfig $ ("git" </> "ignore")
-
-
--- TODO replace generic FilePath with something more type safe
-ignoredPatterns :: MonadIO m
-                => Maybe FilePath
-                -> FilePath
-                -> m (FilePath, [String])
-ignoredPatterns targetPath filePath = do
-  content <- liftIO $ tryIOError loadContent
-  pure $ either (const (resultPath, [])) id content
+loadGitIgnores :: MonadIO m => FilePath -> m [(RepoPath, [G.Pattern])]
+loadGitIgnores repoDir = do
+  gitIgnores <- findGitIgnores repoDir
+  mapM (\p -> (path p, ) <$> loadPatterns p) gitIgnores
  where
-  resultPath  = fromMaybe filePath targetPath
-  loadContent = do
-    handle   <- liftIO $ openFile filePath ReadMode
-    contents <- liftIO $ hGetContents handle
-    pure (resultPath, lines contents)
+  path p = RP.stripSuffix (RP.fromFilePath ".gitignore")
+    $ RP.stripPrefix (RP.fromFilePath repoDir) (RP.fromFilePath p)
 
 
-scanRepo' :: MonadIO m
-          => m FilePath
-          -> (FilePath -> FilePath)
-          -> (FilePath -> m [FilePath])
-          -> FilePath
-          -> m Git
-scanRepo' globalGitIgnoreFn repoGitIgnoreFn dotGitIgnoresFn repoDir = do
-  dotGitIgnores' <- dotGitIgnoresFn repoDir >>= mapM (ignoredPatterns Nothing)
-  repoGitIgnore' <- ignoredPatterns (Just "/") $ repoGitIgnoreFn repoDir
-  globalIgnore'  <- globalGitIgnoreFn >>= ignoredPatterns (Just "/")
-  let patterns = [globalIgnore'] <> [repoGitIgnore'] <> dotGitIgnores'
-  pure $ Git { gitIgnoredPatterns = M.fromList patterns, gitRepoRoot = repoDir }
+loadRepoIgnored :: MonadIO m => FilePath -> m [G.Pattern]
+loadRepoIgnored repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
+
+
+loadGlobalIgnored :: MonadIO m => m [G.Pattern]
+loadGlobalIgnored =
+  (liftIO . getXdgDirectory XdgConfig $ ("git" </> "ignore")) >>= loadPatterns

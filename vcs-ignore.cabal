@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e3dfaf98871a06cbc4ff4785511334f74af024aecc32ace036e023793d6867e3
+-- hash: d68c95367ab1c70cfb7d19d49024730432d47b9aba966f08676a02badb28b9f1
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -58,7 +58,8 @@ executable ignore
       app
   ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      Glob
+    , base >=4.7 && <5
     , containers
     , exceptions
     , text
@@ -79,7 +80,8 @@ test-suite spec
       test
   ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      Glob
+    , base >=4.7 && <5
     , containers
     , exceptions
     , filepath
