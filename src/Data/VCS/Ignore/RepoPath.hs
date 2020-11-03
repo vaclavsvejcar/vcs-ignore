@@ -19,7 +19,7 @@ import qualified Data.Text                     as T
 
 ---------------------------------  DATA TYPES  ---------------------------------
 
-newtype RepoPath = RepoPath { rpChunks :: [Text] } deriving (Eq, Ord, Show)
+newtype RepoPath = RepoPath { unRepoPath :: [Text] } deriving (Eq, Ord, Show)
 
 instance Semigroup RepoPath where
   RepoPath x <> RepoPath y = RepoPath $ x <> y

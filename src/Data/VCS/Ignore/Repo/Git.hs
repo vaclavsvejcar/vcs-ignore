@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StrictData          #-}
 {-# LANGUAGE TupleSections       #-}
@@ -36,7 +35,6 @@ data Git = Git
   deriving (Eq, Show)
 
 
--- TODO isExcluded
 instance Repo Git where
   repoRoot   = gitRepoRoot
   scanRepo   = scanRepo' loadGlobalPatterns loadRepoPatterns loadGitIgnores
@@ -100,15 +98,7 @@ isExcluded' :: Git -> RepoPath -> Bool
 isExcluded' (Git patterns _) path = any ignored filtered
  where
   asFilePath = T.unpack . T.intercalate "/" . unprefixed
-  unprefixed = \prefix -> rpChunks $ RP.stripPrefix prefix path
+  unprefixed = \prefix -> unRepoPath $ RP.stripPrefix prefix path
   ignored    = \(prefix, ptns) -> any (`G.match` asFilePath prefix) ptns
   filtered   = filter onPath patterns
   onPath     = \(p, _) -> p `RP.isPrefixOf` path
-
-{-
-isExcluded' (Git patterns _) path@(RepoPath chunks) = any (`G.match` fp) ps
- where
-  fp     = T.unpack . T.intercalate "/" $ chunks
-  ps     = concat $ snd <$> filter onPath patterns
-  onPath = \(p, _) -> p `RP.isPrefixOf` path
--}
