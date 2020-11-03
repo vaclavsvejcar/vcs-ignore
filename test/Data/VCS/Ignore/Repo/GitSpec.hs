@@ -27,7 +27,7 @@ spec = do
   describe "loadPatterns" $ do
     it "loads and parses glob patterns from input file" $ do
       let source   = repo </> "a" </> ".gitignore"
-          expected = ["*.xml"]
+          expected = ["**/*.xml"]
       loadPatterns source `shouldReturn` expected
 
     it "returns empty list if input cannot be read" $ do
@@ -47,7 +47,7 @@ spec = do
   describe "loadGitIgnores" $ do
     it "loads patterns for all .gitignore files in repo" $ do
       let expected =
-            [(RepoPath ["a"], ["*.xml"]), (RepoPath ["a", "b"], ["*.txt"])]
+            [(RepoPath ["a"], ["**/*.xml"]), (RepoPath ["a", "b"], ["*.txt"])]
       loadGitIgnores repo `shouldReturn` expected
 
 
@@ -57,9 +57,24 @@ spec = do
           fn2      = const $ pure []
           expected = Git
             { gitIgnoredPatterns = [ (RP.root            , [])
-                                   , (RepoPath ["a"]     , ["*.xml"])
+                                   , (RepoPath ["a"]     , ["**/*.xml"])
                                    , (RepoPath ["a", "b"], ["*.txt"])
                                    ]
             , gitRepoRoot        = repo
             }
       scanRepo' fn1 fn2 loadGitIgnores repo `shouldReturn` expected
+
+
+  describe "isExcluded'" $ do
+    it "checks whether given RepoPath is excluded" $ do
+      let git = Git
+            { gitIgnoredPatterns = [ (RP.root            , [])
+                                   , (RepoPath ["a"]     , ["**/*.xml"])
+                                   , (RepoPath ["a", "b"], ["*.txt"])
+                                   ]
+            , gitRepoRoot        = repo
+            }
+      isExcluded' git (RepoPath ["foo", "bar"]) `shouldBe` False
+      isExcluded' git (RepoPath ["a", "hello.txt"]) `shouldBe` False
+      isExcluded' git (RepoPath ["a", "hello.xml"]) `shouldBe` True
+      isExcluded' git (RepoPath ["a", "b", "hello.xml"]) `shouldBe` True

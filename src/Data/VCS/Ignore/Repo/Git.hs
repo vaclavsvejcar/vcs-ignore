@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StrictData          #-}
 {-# LANGUAGE TupleSections       #-}
@@ -17,7 +18,7 @@ import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
 import           Data.VCS.Ignore.FileSystem     ( findPaths )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
-import           Data.VCS.Ignore.RepoPath       ( RepoPath )
+import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
 import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.Directory               ( XdgDirectory(XdgConfig)
                                                 , getXdgDirectory
@@ -37,8 +38,9 @@ data Git = Git
 
 -- TODO isExcluded
 instance Repo Git where
-  repoRoot = gitRepoRoot
-  scanRepo = scanRepo' loadGlobalPatterns loadRepoPatterns loadGitIgnores
+  repoRoot   = gitRepoRoot
+  scanRepo   = scanRepo' loadGlobalPatterns loadRepoPatterns loadGitIgnores
+  isExcluded = isExcluded'
 
 
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
@@ -90,7 +92,23 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn repoDir = do
   globalPatterns <- globalPatternsFn
   repoPatterns   <- repoPatternsFn repoDir
   gitIgnores     <- gitIgnoresFn repoDir
-  let rootPatterns = [(RP.root, globalPatterns <> repoPatterns)]
-  pure Git { gitIgnoredPatterns = rootPatterns <> gitIgnores
-           , gitRepoRoot        = repoDir
-           }
+  let patterns = [(RP.root, globalPatterns <> repoPatterns)] <> gitIgnores
+  pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir }
+
+
+isExcluded' :: Git -> RepoPath -> Bool
+isExcluded' (Git patterns _) path = any ignored filtered
+ where
+  asFilePath = T.unpack . T.intercalate "/" . unprefixed
+  unprefixed = \prefix -> rpChunks $ RP.stripPrefix prefix path
+  ignored    = \(prefix, ptns) -> any (`G.match` asFilePath prefix) ptns
+  filtered   = filter onPath patterns
+  onPath     = \(p, _) -> p `RP.isPrefixOf` path
+
+{-
+isExcluded' (Git patterns _) path@(RepoPath chunks) = any (`G.match` fp) ps
+ where
+  fp     = T.unpack . T.intercalate "/" $ chunks
+  ps     = concat $ snd <$> filter onPath patterns
+  onPath = \(p, _) -> p `RP.isPrefixOf` path
+-}
