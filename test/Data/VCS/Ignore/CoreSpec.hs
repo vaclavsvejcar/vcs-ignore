@@ -66,9 +66,7 @@ data TestRepo = TestRepo
 
 instance Repo TestRepo where
   repoRoot TestRepo {..} = trPath
-
   scanRepo path = pure TestRepo { trPath = path }
-
   isExcluded _ (RepoPath chunks) = "excluded.txt" `L.elem` chunks
 
 

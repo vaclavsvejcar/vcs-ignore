@@ -3,7 +3,18 @@
 {-# LANGUAGE StrictData          #-}
 {-# LANGUAGE TupleSections       #-}
 
-module Data.VCS.Ignore.Repo.Git where
+module Data.VCS.Ignore.Repo.Git
+  ( Git(..)
+  , parsePatterns
+  , loadPatterns
+  , findGitIgnores
+  , loadGitIgnores
+  , loadRepoPatterns
+  , loadGlobalPatterns
+  , scanRepo'
+  , isExcluded'
+  )
+where
 
 import           Control.Exception              ( SomeException
                                                 , catch
