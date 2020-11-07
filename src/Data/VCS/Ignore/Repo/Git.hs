@@ -5,12 +5,13 @@
 
 module Data.VCS.Ignore.Repo.Git
   ( Git(..)
+  , isGitRepo
   , parsePatterns
   , loadPatterns
   , findGitIgnores
-  , loadGitIgnores
-  , loadRepoPatterns
-  , loadGlobalPatterns
+  , gitIgnorePatterns
+  , repoPatterns
+  , globalPatterns
   , scanRepo'
   , isExcluded'
   )
@@ -18,6 +19,9 @@ where
 
 import           Control.Exception              ( SomeException
                                                 , catch
+                                                )
+import           Control.Monad.Catch            ( MonadThrow
+                                                , throwM
                                                 )
 import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
@@ -27,10 +31,13 @@ import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
 import           Data.VCS.Ignore.FileSystem     ( findPaths )
-import           Data.VCS.Ignore.Repo           ( Repo(..) )
+import           Data.VCS.Ignore.Repo           ( Repo(..)
+                                                , RepoError(..)
+                                                )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
 import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.Directory               ( XdgDirectory(XdgConfig)
+                                                , doesDirectoryExist
                                                 , getXdgDirectory
                                                 )
 import           System.FilePath                ( (</>) )
@@ -48,11 +55,14 @@ data Git = Git
 
 instance Repo Git where
   repoRoot   = gitRepoRoot
-  scanRepo   = scanRepo' loadGlobalPatterns loadRepoPatterns loadGitIgnores
+  scanRepo   = scanRepo' globalPatterns repoPatterns gitIgnorePatterns isGitRepo
   isExcluded = isExcluded'
 
 
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
+
+isGitRepo :: MonadIO m => FilePath -> m Bool
+isGitRepo path = liftIO . doesDirectoryExist $ path </> ".git"
 
 parsePatterns :: Text -> [G.Pattern]
 parsePatterns = fmap (G.compile . T.unpack) . filter (not . excluded) . T.lines
@@ -73,8 +83,8 @@ findGitIgnores repoDir = findPaths repoDir isGitIgnore
   where isGitIgnore path = pure $ ".gitignore" `L.isSuffixOf` path
 
 
-loadGitIgnores :: MonadIO m => FilePath -> m [(RepoPath, [G.Pattern])]
-loadGitIgnores repoDir = do
+gitIgnorePatterns :: MonadIO m => FilePath -> m [(RepoPath, [G.Pattern])]
+gitIgnorePatterns repoDir = do
   gitIgnores <- findGitIgnores repoDir
   mapM (\p -> (path p, ) <$> loadPatterns p) gitIgnores
  where
@@ -82,27 +92,33 @@ loadGitIgnores repoDir = do
     $ RP.stripPrefix (RP.fromFilePath repoDir) (RP.fromFilePath p)
 
 
-loadRepoPatterns :: MonadIO m => FilePath -> m [G.Pattern]
-loadRepoPatterns repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
+repoPatterns :: MonadIO m => FilePath -> m [G.Pattern]
+repoPatterns repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
 
 
-loadGlobalPatterns :: MonadIO m => m [G.Pattern]
-loadGlobalPatterns =
+globalPatterns :: MonadIO m => m [G.Pattern]
+globalPatterns =
   (liftIO . getXdgDirectory XdgConfig $ ("git" </> "ignore")) >>= loadPatterns
 
 
-scanRepo' :: MonadIO m
+scanRepo' :: (MonadIO m, MonadThrow m)
           => m [G.Pattern]
           -> (FilePath -> m [G.Pattern])
           -> (FilePath -> m [(RepoPath, [G.Pattern])])
+          -> (FilePath -> m Bool)
           -> FilePath
           -> m Git
-scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn repoDir = do
-  globalPatterns <- globalPatternsFn
-  repoPatterns   <- repoPatternsFn repoDir
-  gitIgnores     <- gitIgnoresFn repoDir
-  let patterns = [(RP.root, globalPatterns <> repoPatterns)] <> gitIgnores
-  pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir }
+scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
+  gitRepo <- isGitRepoFn repoDir
+  if gitRepo then proceed else abort
+ where
+  abort   = throwM $ InvalidRepo repoDir "not a valid GIT repository"
+  proceed = do
+    globalPatterns' <- globalPatternsFn
+    repoPatterns'   <- repoPatternsFn repoDir
+    gitIgnores      <- gitIgnoresFn repoDir
+    let patterns = [(RP.root, globalPatterns' <> repoPatterns')] <> gitIgnores
+    pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir }
 
 
 isExcluded' :: Git -> RepoPath -> Bool

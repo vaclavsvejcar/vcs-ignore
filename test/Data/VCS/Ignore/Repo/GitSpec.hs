@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Data.VCS.Ignore.Repo.GitSpec
   ( spec
@@ -6,7 +7,19 @@ module Data.VCS.Ignore.Repo.GitSpec
 where
 
 import qualified Data.Text                     as T
-import           Data.VCS.Ignore.Repo.Git
+import           Data.VCS.Ignore.Repo           ( RepoError(..) )
+import           Data.VCS.Ignore.Repo.Git       ( Git
+                                                  ( Git
+                                                  , gitIgnoredPatterns
+                                                  , gitRepoRoot
+                                                  )
+                                                , findGitIgnores
+                                                , gitIgnorePatterns
+                                                , isExcluded'
+                                                , loadPatterns
+                                                , parsePatterns
+                                                , scanRepo'
+                                                )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
 import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.FilePath                ( (</>) )
@@ -44,17 +57,18 @@ spec = do
       findGitIgnores repo `shouldReturn` expected
 
 
-  describe "loadGitIgnores" $ do
+  describe "gitIgnorePatterns" $ do
     it "loads patterns for all .gitignore files in repo" $ do
       let expected =
             [(RepoPath ["a"], ["**/*.xml"]), (RepoPath ["a", "b"], ["*.txt"])]
-      loadGitIgnores repo `shouldReturn` expected
+      gitIgnorePatterns repo `shouldReturn` expected
 
 
   describe "scanRepo'" $ do
     it "scans repository for ignored patterns" $ do
       let fn1      = pure []
           fn2      = const $ pure []
+          fn3      = const $ pure True
           expected = Git
             { gitIgnoredPatterns = [ (RP.root            , [])
                                    , (RepoPath ["a"]     , ["**/*.xml"])
@@ -62,7 +76,14 @@ spec = do
                                    ]
             , gitRepoRoot        = repo
             }
-      scanRepo' fn1 fn2 loadGitIgnores repo `shouldReturn` expected
+      scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo `shouldReturn` expected
+
+    it "aborts scanning if given path is not valid GIT repo" $ do
+      let fn1 = pure []
+          fn2 = const $ pure []
+          fn3 = const $ pure False
+      let err (InvalidRepo _ _) = True
+      scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo `shouldThrow` err
 
 
   describe "isExcluded'" $ do

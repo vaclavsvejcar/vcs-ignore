@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d68c95367ab1c70cfb7d19d49024730432d47b9aba966f08676a02badb28b9f1
+-- hash: 51c980b23967b1c6909aa550f8c8471b31af9885958d8569686362585d7ab899
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -34,6 +34,7 @@ library
       Data.VCS.Ignore.Repo
       Data.VCS.Ignore.Repo.Git
       Data.VCS.Ignore.RepoPath
+      Data.VCS.Ignore.Types
       Lib
   other-modules:
       Paths_vcs_ignore
@@ -74,7 +75,6 @@ test-suite spec
       Data.VCS.Ignore.FileSystemSpec
       Data.VCS.Ignore.Repo.GitSpec
       Data.VCS.Ignore.RepoPathSpec
-      Test.Toolkit
       Paths_vcs_ignore
   hs-source-dirs:
       test
