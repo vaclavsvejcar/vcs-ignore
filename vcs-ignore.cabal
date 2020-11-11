@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 51c980b23967b1c6909aa550f8c8471b31af9885958d8569686362585d7ab899
+-- hash: 267377ef2df26e577e8df2bb32fd73a74ef20bf2c79cdc2adabe873d21969ada
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -35,7 +35,6 @@ library
       Data.VCS.Ignore.Repo.Git
       Data.VCS.Ignore.RepoPath
       Data.VCS.Ignore.Types
-      Lib
   other-modules:
       Paths_vcs_ignore
   hs-source-dirs:
@@ -54,6 +53,7 @@ library
 executable ignore
   main-is: Main.hs
   other-modules:
+      Main.Options
       Paths_vcs_ignore
   hs-source-dirs:
       app
@@ -63,6 +63,7 @@ executable ignore
     , base >=4.7 && <5
     , containers
     , exceptions
+    , optparse-applicative
     , text
     , vcs-ignore
   default-language: Haskell2010

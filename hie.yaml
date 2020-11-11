@@ -3,7 +3,7 @@ cradle:
     - path: "./src"
       component: "vcs-ignore:lib"
 
-    - path: "./app/Main.hs"
+    - path: "./app"
       component: "vcs-ignore:exe:ignore"
 
     - path: "./app/Paths_vcs_ignore.hs"

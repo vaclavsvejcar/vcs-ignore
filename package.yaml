@@ -46,6 +46,7 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
+      - optparse-applicative
       - vcs-ignore
 
 tests:
