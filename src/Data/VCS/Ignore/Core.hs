@@ -1,8 +1,16 @@
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE StrictData       #-}
+{-# LANGUAGE TypeApplications #-}
 
-module Data.VCS.Ignore.Core where
+module Data.VCS.Ignore.Core
+  ( findRepo
+  , listRepo
+  , walkRepo
+  )
+where
 
-import           Control.Exception              ( catch )
+import           Control.Exception              ( catch
+                                                , try
+                                                )
 import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
                                                 )
@@ -18,6 +26,20 @@ import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath
                                                 , fromFilePath
                                                 )
+import           Data.VCS.Ignore.Types          ( VCSIgnoreError )
+import           System.FilePath                ( takeDirectory )
+
+
+findRepo :: (MonadIO m, Repo r) => FilePath -> m (Maybe r)
+findRepo = liftIO . go
+ where
+  go dir = do
+    let parent = takeDirectory dir
+    maybeRepo <- try @VCSIgnoreError (scanRepo dir)
+    case maybeRepo of
+      Left _ | parent == dir -> pure Nothing
+      Left  _                -> go parent
+      Right repo             -> pure . Just $ repo
 
 
 listRepo :: (MonadIO m, Repo r) => r -> PathFilter -> m [RepoPath]

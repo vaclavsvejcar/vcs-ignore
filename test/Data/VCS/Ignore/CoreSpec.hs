@@ -9,12 +9,15 @@ module Data.VCS.Ignore.CoreSpec
   )
 where
 
+import           Control.Monad.Catch            ( throwM )
 import qualified Data.List                     as L
 import           Data.VCS.Ignore.Core
 import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
                                                 , notMatched
                                                 )
-import           Data.VCS.Ignore.Repo           ( Repo(..) )
+import           Data.VCS.Ignore.Repo           ( Repo(..)
+                                                , RepoError(..)
+                                                )
 import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
@@ -22,7 +25,17 @@ import           Test.Hspec
 
 spec :: Spec
 spec = do
-  let testRepoRoot = "test-data" </> "fake-git-repo"
+
+  describe "findRepo" $ do
+    it "finds repo for some path inside repo" $ do
+      let path     = testRepoRoot </> "a" </> "b"
+          expected = TestRepo testRepoRoot
+      findRepo path `shouldReturn` Just expected
+
+    it "finds no repo for path outside repo" $ do
+      let path = "some" </> "path"
+      findRepo path `shouldReturn` Nothing @TestRepo
+
 
   describe "listRepo" $ do
     it "lists repository paths, based on the search filter" $ do
@@ -66,7 +79,8 @@ data TestRepo = TestRepo
 
 instance Repo TestRepo where
   repoRoot TestRepo {..} = trPath
-  scanRepo path = pure TestRepo { trPath = path }
+  scanRepo path | path == testRepoRoot = pure TestRepo { trPath = path }
+                | otherwise            = throwM $ InvalidRepo path "err"
   isExcluded _ (RepoPath chunks) = "excluded.txt" `L.elem` chunks
 
 
@@ -74,3 +88,6 @@ testPathFilter :: PathFilter
 testPathFilter = PathFilter $ \case
   rp@(RepoPath chunks) | "test-b.txt" `L.elem` chunks -> notMatched rp
   other -> pure other
+
+testRepoRoot :: FilePath
+testRepoRoot = "test-data" </> "fake-git-repo"
