@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 267377ef2df26e577e8df2bb32fd73a74ef20bf2c79cdc2adabe873d21969ada
+-- hash: 8a31861ab158a2156dffc221fe5e0fc12957f8e9b89890b505760778dafd38a5
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -62,6 +62,7 @@ executable ignore
       Glob
     , base >=4.7 && <5
     , containers
+    , directory
     , exceptions
     , optparse-applicative
     , text
@@ -84,6 +85,7 @@ test-suite spec
       Glob
     , base >=4.7 && <5
     , containers
+    , directory
     , exceptions
     , filepath
     , hspec
