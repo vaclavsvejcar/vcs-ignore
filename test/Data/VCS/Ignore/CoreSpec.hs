@@ -42,6 +42,7 @@ spec = do
       let pathFilter = mempty
           expected =
             [ RepoPath []
+            , RepoPath [".gitignore"]
             , RepoPath ["a"]
             , RepoPath ["a", ".gitignore"]
             , RepoPath ["a", "b"]
@@ -59,6 +60,7 @@ spec = do
       let pathFilter = testPathFilter
           expected =
             [ RepoPath []
+            , RepoPath [".gitignore"]
             , RepoPath ["a"]
             , RepoPath ["a", ".gitignore"]
             , RepoPath ["a", "b"]

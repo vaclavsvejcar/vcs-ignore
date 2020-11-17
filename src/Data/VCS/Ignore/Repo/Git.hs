@@ -27,6 +27,7 @@ import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
                                                 )
 import qualified Data.List                     as L
+import           Data.Maybe                     ( maybeToList )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
@@ -63,6 +64,7 @@ instance Repo Git where
 
 isGitRepo :: MonadIO m => FilePath -> m Bool
 isGitRepo path = liftIO . doesDirectoryExist $ path </> ".git"
+
 
 parsePatterns :: Text -> [G.Pattern]
 parsePatterns = fmap (G.compile . T.unpack) . filter (not . excluded) . T.lines
@@ -117,8 +119,14 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
     globalPatterns' <- globalPatternsFn
     repoPatterns'   <- repoPatternsFn repoDir
     gitIgnores      <- gitIgnoresFn repoDir
-    let patterns = [(RP.root, globalPatterns' <> repoPatterns')] <> gitIgnores
+    let (r, o)   = sep gitIgnores
+        patterns = [(RP.root, globalPatterns' <> repoPatterns' <> r)] <> o
     pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir }
+  sep xs =
+    let predicate = \(p, _) -> p == RP.root
+        woRoot    = filter (not . predicate) xs
+        root      = concat . maybeToList $ snd <$> L.find predicate xs
+    in  (root, woRoot)
 
 
 isExcluded' :: Git -> RepoPath -> Bool

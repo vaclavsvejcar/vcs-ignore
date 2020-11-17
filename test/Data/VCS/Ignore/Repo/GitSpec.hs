@@ -53,6 +53,7 @@ spec = do
       let expected =
             [ repo </> "a" </> ".gitignore"
             , repo </> "a" </> "b" </> ".gitignore"
+            , repo </> ".gitignore"
             ]
       findGitIgnores repo `shouldReturn` expected
 
@@ -60,7 +61,10 @@ spec = do
   describe "gitIgnorePatterns" $ do
     it "loads patterns for all .gitignore files in repo" $ do
       let expected =
-            [(RepoPath ["a"], ["**/*.xml"]), (RepoPath ["a", "b"], ["*.txt"])]
+            [ (RepoPath ["a"]     , ["**/*.xml"])
+            , (RepoPath ["a", "b"], ["*.txt"])
+            , (RP.root            , ["foo"])
+            ]
       gitIgnorePatterns repo `shouldReturn` expected
 
 
@@ -70,7 +74,7 @@ spec = do
           fn2      = const $ pure []
           fn3      = const $ pure True
           expected = Git
-            { gitIgnoredPatterns = [ (RP.root            , [])
+            { gitIgnoredPatterns = [ (RP.root            , ["foo"])
                                    , (RepoPath ["a"]     , ["**/*.xml"])
                                    , (RepoPath ["a", "b"], ["*.txt"])
                                    ]
