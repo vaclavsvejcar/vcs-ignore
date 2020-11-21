@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE StrictData        #-}
@@ -12,13 +11,10 @@ where
 import           Control.Monad.Catch            ( throwM )
 import qualified Data.List                     as L
 import           Data.VCS.Ignore.Core
-import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
-                                                , notMatched
-                                                )
+
 import           Data.VCS.Ignore.Repo           ( Repo(..)
                                                 , RepoError(..)
                                                 )
-import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
 
@@ -39,38 +35,34 @@ spec = do
 
   describe "listRepo" $ do
     it "lists repository paths, based on the search filter" $ do
-      let pathFilter = mempty
-          expected =
-            [ RepoPath []
-            , RepoPath [".gitignore"]
-            , RepoPath ["a"]
-            , RepoPath ["a", ".gitignore"]
-            , RepoPath ["a", "b"]
-            , RepoPath ["a", "b", ".gitignore"]
-            , RepoPath ["a", "b", "test-b.txt"]
-            , RepoPath ["a", "b", "test-b.xml"]
-            , RepoPath ["a", "test-a.txt"]
-            , RepoPath ["a", "test-a.xml"]
+      let expected =
+            [ ".gitignore"
+            , "a/.gitignore"
+            , "a/b/.gitignore"
+            , "a/b/test-b.txt"
+            , "a/b/test-b.xml"
+            , "a/test-a.txt"
+            , "a/test-a.xml"
             ]
       repo   <- scanRepo @TestRepo testRepoRoot
-      result <- listRepo repo pathFilter
+      result <- listRepo repo
       L.sort result `shouldBe` L.sort expected
 
+
+  describe "walkRepo" $ do
     it "walks repository paths, based on the search filter" $ do
-      let pathFilter = testPathFilter
+      let fn = \path -> pure ("foo/" <> path)
           expected =
-            [ RepoPath []
-            , RepoPath [".gitignore"]
-            , RepoPath ["a"]
-            , RepoPath ["a", ".gitignore"]
-            , RepoPath ["a", "b"]
-            , RepoPath ["a", "b", ".gitignore"]
-            , RepoPath ["a", "b", "test-b.xml"]
-            , RepoPath ["a", "test-a.txt"]
-            , RepoPath ["a", "test-a.xml"]
+            [ "foo/.gitignore"
+            , "foo/a/.gitignore"
+            , "foo/a/b/.gitignore"
+            , "foo/a/b/test-b.txt"
+            , "foo/a/b/test-b.xml"
+            , "foo/a/test-a.txt"
+            , "foo/a/test-a.xml"
             ]
       repo   <- scanRepo @TestRepo testRepoRoot
-      result <- listRepo repo pathFilter
+      result <- walkRepo repo fn
       L.sort result `shouldBe` L.sort expected
 
 
@@ -83,13 +75,8 @@ instance Repo TestRepo where
   repoRoot TestRepo {..} = trPath
   scanRepo path | path == testRepoRoot = pure TestRepo { trPath = path }
                 | otherwise            = throwM $ InvalidRepo path "err"
-  isExcluded _ (RepoPath chunks) = "excluded.txt" `L.elem` chunks
+  isExcluded _ path = "excluded.txt" `L.isSuffixOf` path
 
-
-testPathFilter :: PathFilter
-testPathFilter = PathFilter $ \case
-  rp@(RepoPath chunks) | "test-b.txt" `L.elem` chunks -> notMatched rp
-  other -> pure other
 
 testRepoRoot :: FilePath
 testRepoRoot = "test-data" </> "fake-git-repo"

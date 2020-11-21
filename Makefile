@@ -15,8 +15,14 @@ pretty:
 .PHONY: fresh
 fresh: clean build
 
+.PHONY: hlint
+hlint:
+	hlint ./app
+	hlint ./src
+	hlint ./test
+
 .PHONY: build
-build: pretty
+build: hlint pretty
 	stack build
 	stack test
 	stack haddock

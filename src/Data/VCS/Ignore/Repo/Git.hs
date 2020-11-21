@@ -31,12 +31,10 @@ import           Data.Maybe                     ( maybeToList )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
-import           Data.VCS.Ignore.FileSystem     ( findPaths )
+import           Data.VCS.Ignore.FileSystem     ( findFiles )
 import           Data.VCS.Ignore.Repo           ( Repo(..)
                                                 , RepoError(..)
                                                 )
-import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
-import qualified Data.VCS.Ignore.RepoPath      as RP
 import           System.Directory               ( XdgDirectory(XdgConfig)
                                                 , doesDirectoryExist
                                                 , getXdgDirectory
@@ -48,7 +46,7 @@ import qualified System.FilePath.Glob          as G
 ---------------------------------  DATA TYPES  ---------------------------------
 
 data Git = Git
-  { gitIgnoredPatterns :: [(RepoPath, [G.Pattern])]
+  { gitIgnoredPatterns :: [(FilePath, [G.Pattern])]
   , gitRepoRoot        :: FilePath
   }
   deriving (Eq, Show)
@@ -81,17 +79,15 @@ loadPatterns path = parsePatterns <$> liftIO content
 
 
 findGitIgnores :: MonadIO m => FilePath -> m [FilePath]
-findGitIgnores repoDir = findPaths repoDir isGitIgnore
+findGitIgnores repoDir = findFiles repoDir isGitIgnore
   where isGitIgnore path = pure $ ".gitignore" `L.isSuffixOf` path
 
 
-gitIgnorePatterns :: MonadIO m => FilePath -> m [(RepoPath, [G.Pattern])]
+gitIgnorePatterns :: MonadIO m => FilePath -> m [(FilePath, [G.Pattern])]
 gitIgnorePatterns repoDir = do
   gitIgnores <- findGitIgnores repoDir
   mapM (\p -> (path p, ) <$> loadPatterns p) gitIgnores
- where
-  path p = RP.stripSuffix (RP.fromFilePath ".gitignore")
-    $ RP.stripPrefix (RP.fromFilePath repoDir) (RP.fromFilePath p)
+  where path p = stripSuffix' ".gitignore" $ stripPrefix' repoDir p
 
 
 repoPatterns :: MonadIO m => FilePath -> m [G.Pattern]
@@ -106,7 +102,7 @@ globalPatterns =
 scanRepo' :: (MonadIO m, MonadThrow m)
           => m [G.Pattern]
           -> (FilePath -> m [G.Pattern])
-          -> (FilePath -> m [(RepoPath, [G.Pattern])])
+          -> (FilePath -> m [(FilePath, [G.Pattern])])
           -> (FilePath -> m Bool)
           -> FilePath
           -> m Git
@@ -120,20 +116,36 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
     repoPatterns'   <- repoPatternsFn repoDir
     gitIgnores      <- gitIgnoresFn repoDir
     let (r, o)   = sep gitIgnores
-        patterns = [(RP.root, globalPatterns' <> repoPatterns' <> r)] <> o
+        patterns = [("/", globalPatterns' <> repoPatterns' <> r)] <> o
     pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir }
   sep xs =
-    let predicate = \(p, _) -> p == RP.root
+    let predicate = \(p, _) -> p == "/"
         woRoot    = filter (not . predicate) xs
         root      = concat . maybeToList $ snd <$> L.find predicate xs
     in  (root, woRoot)
 
 
-isExcluded' :: Git -> RepoPath -> Bool
+isExcluded' :: Git -> FilePath -> Bool
 isExcluded' (Git patterns _) path = any ignored filtered
  where
-  asFilePath = T.unpack . T.intercalate "/" . unprefixed
-  unprefixed = \prefix -> unRepoPath $ RP.stripPrefix prefix path
-  ignored    = \(prefix, ptns) -> any (`G.match` asFilePath prefix) ptns
+  sanitized  = addPrefix "/" path
+  asRepoPath = unprefixed
+  unprefixed = (`stripPrefix'` sanitized)
+  ignored    = \(prefix, ptns) -> any (`G.match` asRepoPath prefix) ptns
   filtered   = filter onPath patterns
-  onPath     = \(p, _) -> p `RP.isPrefixOf` path
+  onPath     = \(p, _) -> p `L.isPrefixOf` sanitized
+
+
+addPrefix :: String -> String -> String
+addPrefix prefix str | prefix `L.isPrefixOf` str = str
+                     | otherwise                 = prefix <> str
+
+
+stripPrefix' :: String -> String -> String
+stripPrefix' prefix str =
+  maybe str T.unpack (T.stripPrefix (T.pack prefix) (T.pack str))
+
+
+stripSuffix' :: String -> String -> String
+stripSuffix' suffix str =
+  maybe str T.unpack (T.stripSuffix (T.pack suffix) (T.pack str))

@@ -8,9 +8,7 @@ module Data.VCS.Ignore.Core
   )
 where
 
-import           Control.Exception              ( catch
-                                                , try
-                                                )
+import           Control.Exception              ( try )
 import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
                                                 )
@@ -18,14 +16,8 @@ import qualified Data.List                     as L
 import           Data.Maybe                     ( catMaybes
                                                 , fromMaybe
                                                 )
-import           Data.VCS.Ignore.FileSystem     ( walkPaths )
-import           Data.VCS.Ignore.PathFilter     ( PathFilter(..)
-                                                , PathNotMatched
-                                                )
+import           Data.VCS.Ignore.FileSystem     ( walkFiles )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
-import           Data.VCS.Ignore.RepoPath       ( RepoPath
-                                                , fromFilePath
-                                                )
 import           Data.VCS.Ignore.Types          ( VCSIgnoreError )
 import           System.FilePath                ( takeDirectory )
 
@@ -42,18 +34,17 @@ findRepo = liftIO . go
       Right repo             -> pure . Just $ repo
 
 
-listRepo :: (MonadIO m, Repo r) => r -> PathFilter -> m [RepoPath]
-listRepo repo searchFilter = walkRepo repo searchFilter pure
+listRepo :: (MonadIO m, Repo r) => r -> m [FilePath]
+listRepo repo = walkRepo repo pure
 
 
-walkRepo :: (MonadIO m, Repo r) => r -> PathFilter -> (RepoPath -> m a) -> m [a]
-walkRepo repo (PathFilter filterFn) fn = do
+walkRepo :: (MonadIO m, Repo r) => r -> (FilePath -> m a) -> m [a]
+walkRepo repo fn = do
   let search path | isExcluded repo path = pure Nothing
-                  | otherwise            = applyFilter path >>= mapM fn
-  catMaybes <$> walkPaths (repoRoot repo) (search . relativePath)
+                  | otherwise            = Just <$> fn path
+  catMaybes <$> walkFiles root' (search . relativePath)
  where
-  relativePath = fromFilePath . dropPrefix (repoRoot repo)
-  dropPrefix prefix t = fromMaybe t (L.stripPrefix prefix t)
-  applyFilter path = liftIO $ catch
-    (Just <$> filterFn path)
-    (\ex -> let _ = (ex :: PathNotMatched) in pure Nothing)
+  root         = repoRoot repo
+  root'        = if "/" `L.isSuffixOf` root then root else root <> "/"
+  relativePath = dropPrefix root'
+  dropPrefix   = \prefix t -> fromMaybe t (L.stripPrefix prefix t)

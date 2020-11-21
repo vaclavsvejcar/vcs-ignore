@@ -11,7 +11,6 @@ where
 import           Data.VCS.Ignore.Core           ( findRepo )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.Repo.Git       ( Git )
-import           Data.VCS.Ignore.RepoPath       ( fromFilePath )
 import           Main.Options                   ( Mode(..)
                                                 , Options(..)
                                                 , optionsParser
@@ -48,8 +47,8 @@ executeSelected repo (oMode -> Path path) = checkPath repo path
 
 
 checkPath :: Repo r => r -> FilePath -> IO ()
-checkPath repo path | isExcluded repo (fromFilePath path) = reportIgnored
-                    | otherwise                           = reportNotIgnored
+checkPath repo path | isExcluded repo path = reportIgnored
+                    | otherwise            = reportNotIgnored
  where
   reportIgnored = do
     putStrLn $ "Path '" <> path <> "' is ignored"

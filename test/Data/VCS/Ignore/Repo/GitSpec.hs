@@ -8,20 +8,7 @@ where
 
 import qualified Data.Text                     as T
 import           Data.VCS.Ignore.Repo           ( RepoError(..) )
-import           Data.VCS.Ignore.Repo.Git       ( Git
-                                                  ( Git
-                                                  , gitIgnoredPatterns
-                                                  , gitRepoRoot
-                                                  )
-                                                , findGitIgnores
-                                                , gitIgnorePatterns
-                                                , isExcluded'
-                                                , loadPatterns
-                                                , parsePatterns
-                                                , scanRepo'
-                                                )
-import           Data.VCS.Ignore.RepoPath       ( RepoPath(..) )
-import qualified Data.VCS.Ignore.RepoPath      as RP
+import           Data.VCS.Ignore.Repo.Git
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
 
@@ -61,10 +48,7 @@ spec = do
   describe "gitIgnorePatterns" $ do
     it "loads patterns for all .gitignore files in repo" $ do
       let expected =
-            [ (RepoPath ["a"]     , ["**/*.xml"])
-            , (RepoPath ["a", "b"], ["*.txt"])
-            , (RP.root            , ["foo"])
-            ]
+            [("/a/", ["**/*.xml"]), ("/a/b/", ["*.txt"]), ("/", ["foo"])]
       gitIgnorePatterns repo `shouldReturn` expected
 
 
@@ -74,9 +58,9 @@ spec = do
           fn2      = const $ pure []
           fn3      = const $ pure True
           expected = Git
-            { gitIgnoredPatterns = [ (RP.root            , ["foo"])
-                                   , (RepoPath ["a"]     , ["**/*.xml"])
-                                   , (RepoPath ["a", "b"], ["*.txt"])
+            { gitIgnoredPatterns = [ ("/"    , ["foo"])
+                                   , ("/a/"  , ["**/*.xml"])
+                                   , ("/a/b/", ["*.txt"])
                                    ]
             , gitRepoRoot        = repo
             }
@@ -91,15 +75,19 @@ spec = do
 
 
   describe "isExcluded'" $ do
-    it "checks whether given RepoPath is excluded" $ do
+    it "checks whether given path is excluded" $ do
       let git = Git
-            { gitIgnoredPatterns = [ (RP.root            , [])
-                                   , (RepoPath ["a"]     , ["**/*.xml"])
-                                   , (RepoPath ["a", "b"], ["*.txt"])
+            { gitIgnoredPatterns = [ ("/"    , [])
+                                   , ("/a/"  , ["**/*.xml"])
+                                   , ("/a/b/", ["*.txt"])
                                    ]
             , gitRepoRoot        = repo
             }
-      isExcluded' git (RepoPath ["foo", "bar"]) `shouldBe` False
-      isExcluded' git (RepoPath ["a", "hello.txt"]) `shouldBe` False
-      isExcluded' git (RepoPath ["a", "hello.xml"]) `shouldBe` True
-      isExcluded' git (RepoPath ["a", "b", "hello.xml"]) `shouldBe` True
+      isExcluded' git "foo/bar" `shouldBe` False
+      isExcluded' git "a/hello.txt" `shouldBe` False
+      isExcluded' git "a/hello.xml" `shouldBe` True
+      isExcluded' git "a/b/hello.xml" `shouldBe` True
+      isExcluded' git "/foo/bar" `shouldBe` False
+      isExcluded' git "/a/hello.txt" `shouldBe` False
+      isExcluded' git "/a/hello.xml" `shouldBe` True
+      isExcluded' git "/a/b/hello.xml" `shouldBe` True

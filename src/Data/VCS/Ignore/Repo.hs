@@ -11,7 +11,6 @@ import           Control.Monad.Catch            ( MonadThrow )
 import           Control.Monad.IO.Class         ( MonadIO )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
-import           Data.VCS.Ignore.RepoPath       ( RepoPath )
 import           Data.VCS.Ignore.Types          ( fromVCSIgnoreError
                                                 , toVCSIgnoreError
                                                 )
@@ -23,7 +22,7 @@ class Repo r where
 
   scanRepo :: (MonadIO m, MonadThrow m) => FilePath -> m r
 
-  isExcluded :: r -> RepoPath -> Bool
+  isExcluded :: r -> FilePath -> Bool
 
 
 data RepoError = InvalidRepo FilePath Text
