@@ -17,6 +17,7 @@ dependencies:
   - containers
   - directory
   - exceptions
+  - filepath
   - Glob
   - text
 
@@ -34,7 +35,6 @@ ghc-options:
 library:
   source-dirs: src
   dependencies:
-    - filepath
     - text
 
 executables:
@@ -58,6 +58,5 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - filepath
       - hspec
       - vcs-ignore

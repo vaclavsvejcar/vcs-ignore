@@ -10,8 +10,7 @@ where
 import           Options.Applicative
 
 data Options = Options
-  { oMode     :: Mode
-  , oRepoRoot :: Maybe FilePath
+  { oMode :: Mode
   }
   deriving (Eq, Show)
 
@@ -31,9 +30,3 @@ optionsParser = info (options <**> helper)
                   "path to check"
                 )
           )
-      <*> optional
-            (strOption
-              (long "repository" <> short 'r' <> metavar "PATH" <> help
-                "path to the repository"
-              )
-            )

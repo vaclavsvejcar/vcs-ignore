@@ -16,22 +16,25 @@ import           Main.Options                   ( Mode(..)
                                                 , optionsParser
                                                 )
 import           Options.Applicative            ( execParser )
-import           System.Directory               ( getCurrentDirectory )
+import           System.Directory               ( canonicalizePath
+                                                , getCurrentDirectory
+                                                )
 import           System.Exit                    ( exitFailure
                                                 , exitSuccess
                                                 )
+import           System.FilePath                ( makeRelative )
 
 
 main :: IO ()
 main = do
   options <- execParser optionsParser
   repo    <- findRepoOrFail @Git options
-  executeSelected repo options
+  executeMode repo options
 
 
 findRepoOrFail :: Repo r => Options -> IO r
 findRepoOrFail Options {..} = do
-  repoDir   <- maybe getCurrentDirectory pure oRepoRoot
+  repoDir   <- getCurrentDirectory
   maybeRepo <- findRepo repoDir
   case maybeRepo of
     Just repo -> do
@@ -42,17 +45,19 @@ findRepoOrFail Options {..} = do
       exitFailure
 
 
-executeSelected :: Repo r => r -> Options -> IO ()
-executeSelected repo (oMode -> Path path) = checkPath repo path
+executeMode :: Repo r => r -> Options -> IO ()
+executeMode repo (oMode -> Path path) = checkPath repo path
 
 
 checkPath :: Repo r => r -> FilePath -> IO ()
-checkPath repo path | isExcluded repo path = reportIgnored
-                    | otherwise            = reportNotIgnored
+checkPath repo path = do
+  relative <- makeRelative (repoRoot repo) <$> canonicalizePath path
+  if isExcluded repo relative then reportIgnored else reportNotIgnored
  where
   reportIgnored = do
-    putStrLn $ "Path '" <> path <> "' is ignored"
+    putStrLn $ "Path '" <> path <> "' IS ignored"
     exitSuccess
   reportNotIgnored = do
-    putStrLn $ "Path '" <> path <> "' is not ignored"
+    putStrLn $ "Path '" <> path <> "' IS NOT ignored"
     exitFailure
+
