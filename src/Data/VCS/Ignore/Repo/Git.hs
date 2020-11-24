@@ -31,7 +31,7 @@ import           Data.Maybe                     ( maybeToList )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
-import           Data.VCS.Ignore.FileSystem     ( findFiles )
+import           Data.VCS.Ignore.FileSystem     ( findPaths )
 import           Data.VCS.Ignore.Repo           ( Repo(..)
                                                 , RepoError(..)
                                                 )
@@ -79,7 +79,7 @@ loadPatterns path = parsePatterns <$> liftIO content
 
 
 findGitIgnores :: MonadIO m => FilePath -> m [FilePath]
-findGitIgnores repoDir = findFiles repoDir isGitIgnore
+findGitIgnores repoDir = findPaths repoDir isGitIgnore
   where isGitIgnore path = pure $ ".gitignore" `L.isSuffixOf` path
 
 

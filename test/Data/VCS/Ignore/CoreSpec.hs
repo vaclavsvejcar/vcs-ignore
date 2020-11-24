@@ -37,7 +37,9 @@ spec = do
     it "lists repository paths, based on the search filter" $ do
       let expected =
             [ ".gitignore"
+            , "a"
             , "a/.gitignore"
+            , "a/b"
             , "a/b/.gitignore"
             , "a/b/test-b.txt"
             , "a/b/test-b.xml"
@@ -54,7 +56,9 @@ spec = do
       let fn = \path -> pure ("foo/" <> path)
           expected =
             [ "foo/.gitignore"
+            , "foo/a"
             , "foo/a/.gitignore"
+            , "foo/a/b"
             , "foo/a/b/.gitignore"
             , "foo/a/b/test-b.txt"
             , "foo/a/b/test-b.xml"

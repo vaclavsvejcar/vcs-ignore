@@ -16,10 +16,12 @@ import qualified Data.List                     as L
 import           Data.Maybe                     ( catMaybes
                                                 , fromMaybe
                                                 )
-import           Data.VCS.Ignore.FileSystem     ( walkFiles )
+import           Data.VCS.Ignore.FileSystem     ( walkPaths )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.Types          ( VCSIgnoreError )
-import           System.FilePath                ( takeDirectory )
+import           System.FilePath                ( pathSeparator
+                                                , takeDirectory
+                                                )
 
 
 findRepo :: (MonadIO m, Repo r) => FilePath -> m (Maybe r)
@@ -40,11 +42,13 @@ listRepo repo = walkRepo repo pure
 
 walkRepo :: (MonadIO m, Repo r) => r -> (FilePath -> m a) -> m [a]
 walkRepo repo fn = do
-  let search path | isExcluded repo path = pure Nothing
+  let search path | L.null path          = pure Nothing
+                  | isExcluded repo path = pure Nothing
                   | otherwise            = Just <$> fn path
-  catMaybes <$> walkFiles root' (search . relativePath)
+  catMaybes <$> walkPaths root' (search . relativePath)
  where
+  ps           = [pathSeparator]
   root         = repoRoot repo
-  root'        = if "/" `L.isSuffixOf` root then root else root <> "/"
+  root'        = if ps `L.isSuffixOf` root then root else root <> ps
   relativePath = dropPrefix root'
   dropPrefix   = \prefix t -> fromMaybe t (L.stripPrefix prefix t)
