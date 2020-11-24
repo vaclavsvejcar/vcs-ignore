@@ -38,13 +38,13 @@ spec = do
       let expected =
             [ ".gitignore"
             , "a"
-            , "a/.gitignore"
-            , "a/b"
-            , "a/b/.gitignore"
-            , "a/b/test-b.txt"
-            , "a/b/test-b.xml"
-            , "a/test-a.txt"
-            , "a/test-a.xml"
+            , "a" </> ".gitignore"
+            , "a" </> "b"
+            , "a" </> "b" </> ".gitignore"
+            , "a" </> "b" </> "test-b.txt"
+            , "a" </> "b" </> "test-b.xml"
+            , "a" </> "test-a.txt"
+            , "a" </> "test-a.xml"
             ]
       repo   <- scanRepo @TestRepo testRepoRoot
       result <- listRepo repo
@@ -53,17 +53,17 @@ spec = do
 
   describe "walkRepo" $ do
     it "walks repository paths, based on the search filter" $ do
-      let fn = \path -> pure ("foo/" <> path)
+      let fn = \path -> pure ("foo" </> path)
           expected =
-            [ "foo/.gitignore"
-            , "foo/a"
-            , "foo/a/.gitignore"
-            , "foo/a/b"
-            , "foo/a/b/.gitignore"
-            , "foo/a/b/test-b.txt"
-            , "foo/a/b/test-b.xml"
-            , "foo/a/test-a.txt"
-            , "foo/a/test-a.xml"
+            [ "foo" </> ".gitignore"
+            , "foo" </> "a"
+            , "foo" </> "a" </> ".gitignore"
+            , "foo" </> "a" </> "b"
+            , "foo" </> "a" </> "b" </> ".gitignore"
+            , "foo" </> "a" </> "b" </> "test-b.txt"
+            , "foo" </> "a" </> "b" </> "test-b.xml"
+            , "foo" </> "a" </> "test-a.txt"
+            , "foo" </> "a" </> "test-a.xml"
             ]
       repo   <- scanRepo @TestRepo testRepoRoot
       result <- walkRepo repo fn
