@@ -36,10 +36,14 @@ import           Data.VCS.Ignore.Repo           ( Repo(..)
                                                 , RepoError(..)
                                                 )
 import           System.Directory               ( XdgDirectory(XdgConfig)
+                                                , canonicalizePath
                                                 , doesDirectoryExist
                                                 , getXdgDirectory
+                                                , makeAbsolute
                                                 )
-import           System.FilePath                ( (</>) )
+import           System.FilePath                ( makeRelative
+                                                , (</>)
+                                                )
 import qualified System.FilePath.Glob          as G
 
 
@@ -107,17 +111,18 @@ scanRepo' :: (MonadIO m, MonadThrow m)
           -> FilePath
           -> m Git
 scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
-  gitRepo <- isGitRepoFn repoDir
-  if gitRepo then proceed else abort
+  absRepoDir <- liftIO $ makeAbsolute repoDir
+  gitRepo    <- isGitRepoFn absRepoDir
+  (if gitRepo then proceed else abort) absRepoDir
  where
-  abort   = throwM $ InvalidRepo repoDir "not a valid GIT repository"
-  proceed = do
+  abort repoDir' = throwM $ InvalidRepo repoDir' "not a valid GIT repository"
+  proceed repoDir' = do
     globalPatterns' <- globalPatternsFn
-    repoPatterns'   <- repoPatternsFn repoDir
-    gitIgnores      <- gitIgnoresFn repoDir
+    repoPatterns'   <- repoPatternsFn repoDir'
+    gitIgnores      <- gitIgnoresFn repoDir'
     let (r, o)   = sep gitIgnores
         patterns = [("/", globalPatterns' <> repoPatterns' <> r)] <> o
-    pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir }
+    pure Git { gitIgnoredPatterns = patterns, gitRepoRoot = repoDir' }
   sep xs =
     let predicate = \(p, _) -> p == "/"
         woRoot    = filter (not . predicate) xs
@@ -125,15 +130,18 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
     in  (root, woRoot)
 
 
-isExcluded' :: Git -> FilePath -> Bool
-isExcluded' (Git patterns _) path = any ignored filtered
+isExcluded' :: MonadIO m => Git -> FilePath -> m Bool
+isExcluded' git@(Git patterns _) path = do
+  np <- normalize (repoRoot git) path
+  pure $ any (ignored np) (filtered np)
  where
-  sanitized  = addPrefix "/" path
-  asRepoPath = unprefixed
-  unprefixed = (`stripPrefix'` sanitized)
-  ignored    = \(prefix, ptns) -> any (`G.match` asRepoPath prefix) ptns
-  filtered   = filter onPath patterns
-  onPath     = \(p, _) -> p `L.isPrefixOf` sanitized
+  sanitized  = addPrefix "/"
+  asRepoPath = \np -> (`stripPrefix'` sanitized np)
+  ignored    = \np (prefix, ptns) -> any (`G.match` asRepoPath np prefix) ptns
+  filtered   = \np -> filter (onPath np) patterns
+  onPath     = \np (p, _) -> p `L.isPrefixOf` sanitized np
+
+------------------------------  PRIVATE FUNCTIONS  -----------------------------
 
 
 addPrefix :: String -> String -> String
@@ -149,3 +157,10 @@ stripPrefix' prefix str =
 stripSuffix' :: String -> String -> String
 stripSuffix' suffix str =
   maybe str T.unpack (T.stripSuffix (T.pack suffix) (T.pack str))
+
+
+normalize :: MonadIO m => FilePath -> FilePath -> m FilePath
+normalize repoDir path = do
+  canonicalized <- liftIO . canonicalizePath $ repoDir </> stripPrefix' "/" path
+  pure $ makeRelative repoDir canonicalized
+

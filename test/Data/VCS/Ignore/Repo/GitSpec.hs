@@ -9,6 +9,7 @@ where
 import qualified Data.Text                     as T
 import           Data.VCS.Ignore.Repo           ( RepoError(..) )
 import           Data.VCS.Ignore.Repo.Git
+import           System.Directory               ( makeAbsolute )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
 
@@ -54,6 +55,7 @@ spec = do
 
   describe "scanRepo'" $ do
     it "scans repository for ignored patterns" $ do
+      absRepo <- makeAbsolute repo
       let fn1      = pure []
           fn2      = const $ pure []
           fn3      = const $ pure True
@@ -62,7 +64,7 @@ spec = do
                                    , ("/a/"  , ["**/*.xml"])
                                    , ("/a/b/", ["*.txt"])
                                    ]
-            , gitRepoRoot        = repo
+            , gitRepoRoot        = absRepo
             }
       scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo `shouldReturn` expected
 
@@ -76,18 +78,21 @@ spec = do
 
   describe "isExcluded'" $ do
     it "checks whether given path is excluded" $ do
+      absRepo <- makeAbsolute repo
       let git = Git
             { gitIgnoredPatterns = [ ("/"    , [])
                                    , ("/a/"  , ["**/*.xml"])
                                    , ("/a/b/", ["*.txt"])
                                    ]
-            , gitRepoRoot        = repo
+            , gitRepoRoot        = absRepo
             }
-      isExcluded' git "foo/bar" `shouldBe` False
-      isExcluded' git "a/hello.txt" `shouldBe` False
-      isExcluded' git "a/hello.xml" `shouldBe` True
-      isExcluded' git "a/b/hello.xml" `shouldBe` True
-      isExcluded' git "/foo/bar" `shouldBe` False
-      isExcluded' git "/a/hello.txt" `shouldBe` False
-      isExcluded' git "/a/hello.xml" `shouldBe` True
-      isExcluded' git "/a/b/hello.xml" `shouldBe` True
+      isExcluded' git "foo/bar" `shouldReturn` False
+      isExcluded' git "a/hello.txt" `shouldReturn` False
+      isExcluded' git "a/hello.xml" `shouldReturn` True
+      isExcluded' git "a/b/hello.xml" `shouldReturn` True
+      isExcluded' git "/foo/bar" `shouldReturn` False
+      isExcluded' git "/a/hello.txt" `shouldReturn` False
+      isExcluded' git "/a/hello.xml" `shouldReturn` True
+      isExcluded' git "/a/b/hello.xml" `shouldReturn` True
+      isExcluded' git "/a/b/../hello.txt" `shouldReturn` False
+      isExcluded' git "/a/b/../hello.xml" `shouldReturn` True

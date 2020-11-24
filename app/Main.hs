@@ -52,7 +52,8 @@ executeMode repo (oMode -> Path path) = checkPath repo path
 checkPath :: Repo r => r -> FilePath -> IO ()
 checkPath repo path = do
   relative <- makeRelative (repoRoot repo) <$> canonicalizePath path
-  if isExcluded repo relative then reportIgnored else reportNotIgnored
+  excluded <- isExcluded repo relative
+  if excluded then reportIgnored else reportNotIgnored
  where
   reportIgnored = do
     putStrLn $ "Path '" <> path <> "' IS ignored"

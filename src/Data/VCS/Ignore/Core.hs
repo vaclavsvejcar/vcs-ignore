@@ -42,9 +42,8 @@ listRepo repo = walkRepo repo pure
 
 walkRepo :: (MonadIO m, Repo r) => r -> (FilePath -> m a) -> m [a]
 walkRepo repo fn = do
-  let search path | L.null path          = pure Nothing
-                  | isExcluded repo path = pure Nothing
-                  | otherwise            = Just <$> fn path
+  let search path | L.null path = pure Nothing
+                  | otherwise   = doSearch path
   catMaybes <$> walkPaths root' (search . relativePath)
  where
   ps           = [pathSeparator]
@@ -52,3 +51,5 @@ walkRepo repo fn = do
   root'        = if ps `L.isSuffixOf` root then root else root <> ps
   relativePath = dropPrefix root'
   dropPrefix   = \prefix t -> fromMaybe t (L.stripPrefix prefix t)
+  doSearch     = \path -> isExcluded repo path >>= process path
+  process      = \path x -> if x then pure Nothing else Just <$> fn path

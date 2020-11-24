@@ -22,7 +22,7 @@ class Repo r where
 
   scanRepo :: (MonadIO m, MonadThrow m) => FilePath -> m r
 
-  isExcluded :: r -> FilePath -> Bool
+  isExcluded :: MonadIO m => r -> FilePath -> m Bool
 
 
 data RepoError = InvalidRepo FilePath Text
