@@ -52,3 +52,10 @@ spec = do
           ]
       actual <- catMaybes <$> walkPaths ("test-data" </> "list-files") fn
       L.sort actual `shouldBe` L.sort expected
+
+
+  describe "toPosixPath" $ do
+    it "replaces any backward slashes with forward ones" $ do
+      let sample = "foo\\bar\\x"
+          expected = "foo/bar/x"
+      toPosixPath sample `shouldBe` expected

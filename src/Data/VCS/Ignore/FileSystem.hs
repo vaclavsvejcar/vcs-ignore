@@ -3,15 +3,20 @@ module Data.VCS.Ignore.FileSystem
   ( findPaths
   , listPaths
   , walkPaths
+  , toPosixPath
   )
 where
 
 
-import           Control.Monad                  ( forM )
+import           Control.Monad                  ( forM
+                                                , mfilter
+                                                )
 import           Control.Monad.IO.Class         ( MonadIO
                                                 , liftIO
                                                 )
-import           Data.Maybe                     ( catMaybes )
+import           Data.Maybe                     ( catMaybes
+                                                , fromMaybe
+                                                )
 import           System.Directory               ( doesDirectoryExist
                                                 , doesFileExist
                                                 , getDirectoryContents
@@ -72,3 +77,8 @@ walkPaths entryPath fn = do
       isDirectory <- liftIO $ doesDirectoryExist path
       if isDirectory then walkPaths path fn else pure <$> fn path
     pure $ concat paths
+
+
+toPosixPath :: FilePath -> FilePath
+toPosixPath = replace '\\' '/'
+  where replace a b = fmap $ fromMaybe b . mfilter (/= a) . Just

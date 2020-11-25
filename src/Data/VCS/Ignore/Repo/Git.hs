@@ -31,7 +31,9 @@ import           Data.Maybe                     ( maybeToList )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as T
-import           Data.VCS.Ignore.FileSystem     ( findPaths )
+import           Data.VCS.Ignore.FileSystem     ( findPaths
+                                                , toPosixPath
+                                                )
 import           Data.VCS.Ignore.Repo           ( Repo(..)
                                                 , RepoError(..)
                                                 )
@@ -90,7 +92,7 @@ findGitIgnores repoDir = findPaths repoDir isGitIgnore
 gitIgnorePatterns :: MonadIO m => FilePath -> m [(FilePath, [G.Pattern])]
 gitIgnorePatterns repoDir = do
   gitIgnores <- findGitIgnores repoDir
-  mapM (\p -> (path p, ) <$> loadPatterns p) gitIgnores
+  mapM (\p -> (toPosixPath . path $ p, ) <$> loadPatterns p) gitIgnores
   where path p = stripSuffix' ".gitignore" $ stripPrefix' repoDir p
 
 
@@ -132,7 +134,7 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
 
 isExcluded' :: MonadIO m => Git -> FilePath -> m Bool
 isExcluded' git@(Git patterns _) path = do
-  np <- normalize (repoRoot git) path
+  np <- toPosixPath <$> normalize (repoRoot git) path
   pure $ any (ignored np) (filtered np)
  where
   sanitized  = addPrefix "/"
