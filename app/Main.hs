@@ -28,12 +28,12 @@ import           System.FilePath                ( makeRelative )
 main :: IO ()
 main = do
   options <- execParser optionsParser
-  repo    <- findRepoOrFail @Git options
+  repo    <- findRepoOrFail @Git
   executeMode repo options
 
 
-findRepoOrFail :: Repo r => Options -> IO r
-findRepoOrFail Options {..} = do
+findRepoOrFail :: Repo r => IO r
+findRepoOrFail = do
   repoDir   <- getCurrentDirectory
   maybeRepo <- findRepo repoDir
   case maybeRepo of
