@@ -12,6 +12,7 @@ import           Data.VCS.Ignore.Repo.Git
 import           System.Directory               ( makeAbsolute )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
+import qualified Data.List                     as L
 
 
 spec :: Spec
@@ -43,30 +44,32 @@ spec = do
             , repo </> "a" </> "b" </> ".gitignore"
             , repo </> ".gitignore"
             ]
-      findGitIgnores repo `shouldReturn` expected
+      L.sort <$> findGitIgnores repo `shouldReturn` L.sort expected
 
 
   describe "gitIgnorePatterns" $ do
     it "loads patterns for all .gitignore files in repo" $ do
       let expected =
             [("/a/", ["**/*.xml"]), ("/a/b/", ["*.txt"]), ("/", ["foo"])]
-      gitIgnorePatterns repo `shouldReturn` expected
+      sort' <$> gitIgnorePatterns repo `shouldReturn` sort' expected
 
 
   describe "scanRepo'" $ do
     it "scans repository for ignored patterns" $ do
       absRepo <- makeAbsolute repo
-      let fn1      = pure []
-          fn2      = const $ pure []
-          fn3      = const $ pure True
-          expected = Git
-            { gitIgnoredPatterns = [ ("/"    , ["foo"])
-                                   , ("/a/"  , ["**/*.xml"])
-                                   , ("/a/b/", ["*.txt"])
-                                   ]
-            , gitRepoRoot        = absRepo
-            }
-      scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo `shouldReturn` expected
+      let
+        fn1      = pure []
+        fn2      = const $ pure []
+        fn3      = const $ pure True
+        expected = Git
+          { gitIgnoredPatterns = sort'
+            [("/", ["foo"]), ("/a/", ["**/*.xml"]), ("/a/b/", ["*.txt"])]
+          , gitRepoRoot        = absRepo
+          }
+      result <- scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo
+      let result' =
+            result { gitIgnoredPatterns = sort' (gitIgnoredPatterns result) }
+      result' `shouldBe` expected
 
     it "aborts scanning if given path is not valid GIT repo" $ do
       let fn1 = pure []
@@ -96,3 +99,7 @@ spec = do
       isExcluded' git "/a/b/hello.xml" `shouldReturn` True
       isExcluded' git "/a/b/../hello.txt" `shouldReturn` False
       isExcluded' git "/a/b/../hello.xml" `shouldReturn` True
+
+
+sort' :: Ord a => [(a, b)] -> [(a, b)]
+sort' = L.sortOn fst
