@@ -60,3 +60,4 @@ tests:
     dependencies:
       - hspec
       - vcs-ignore
+    build-tools: hspec-discover
