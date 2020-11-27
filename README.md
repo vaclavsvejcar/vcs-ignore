@@ -23,6 +23,7 @@ Because this library is really simple to use, following example should be enough
 {-# LANGUAGE TypeApplications #-}
 
 module Data.VCS.Test where
+
 import Data.VCS.Ignore ( Git, Repo(..), listRepo )
 
 example :: IO [FilePath]
