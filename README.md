@@ -60,8 +60,8 @@ module Data.VCS.Test where
 
 import Data.VCS.Ignore ( Git, Repo(..) )
 
-onlyFiles :: IO Bool
-onlyFiles = do
+checkIgnored :: IO Bool
+checkIgnored = do
   repo <- scanRepo @Git "path/to/repo"
   isIgnored repo "/some/path/.DS_Store"
 ```
