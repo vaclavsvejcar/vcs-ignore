@@ -61,3 +61,8 @@ tests:
       - hspec
       - vcs-ignore
     build-tools: hspec-discover
+  doctest:
+    main: Main.hs
+    source-dirs: doctest
+    dependencies:
+      - doctest

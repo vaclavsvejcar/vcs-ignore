@@ -79,7 +79,7 @@ instance Repo TestRepo where
   repoRoot TestRepo {..} = trPath
   scanRepo path | path == testRepoRoot = pure TestRepo { trPath = path }
                 | otherwise            = throwM $ InvalidRepo path "err"
-  isExcluded _ path = pure $ "excluded.txt" `L.isSuffixOf` path
+  isIgnored _ path = pure $ "excluded.txt" `L.isSuffixOf` path
 
 
 testRepoRoot :: FilePath

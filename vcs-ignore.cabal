@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8c65f11ab557b4b4450396f0fbd3091ec3b679e782ede794f4aa1bc6fe2b9bbf
+-- hash: a78f13bbd35355dfbb7e61733f7fd03323c14911b4ef98093cbce9ec1f07bcdd
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -66,6 +66,25 @@ executable ignore
     , optparse-applicative
     , text
     , vcs-ignore
+  default-language: Haskell2010
+
+test-suite doctest
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_vcs_ignore
+  hs-source-dirs:
+      doctest
+  ghc-options: -optP-Wno-nonportable-include-path -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -Werror=incomplete-patterns
+  build-depends:
+      Glob
+    , base >=4.7 && <5
+    , containers
+    , directory
+    , doctest
+    , exceptions
+    , filepath
+    , text
   default-language: Haskell2010
 
 test-suite spec

@@ -6,13 +6,13 @@ module Data.VCS.Ignore.Repo.GitSpec
   )
 where
 
+import qualified Data.List                     as L
 import qualified Data.Text                     as T
 import           Data.VCS.Ignore.Repo           ( RepoError(..) )
 import           Data.VCS.Ignore.Repo.Git
 import           System.Directory               ( makeAbsolute )
 import           System.FilePath                ( (</>) )
 import           Test.Hspec
-import qualified Data.List                     as L
 
 
 spec :: Spec
@@ -51,7 +51,7 @@ spec = do
     it "loads patterns for all .gitignore files in repo" $ do
       let expected =
             [("/a/", ["**/*.xml"]), ("/a/b/", ["*.txt"]), ("/", ["foo"])]
-      sort' <$> gitIgnorePatterns repo `shouldReturn` sort' expected
+      sortFst <$> gitIgnorePatterns repo `shouldReturn` sortFst expected
 
 
   describe "scanRepo'" $ do
@@ -62,13 +62,14 @@ spec = do
         fn2      = const $ pure []
         fn3      = const $ pure True
         expected = Git
-          { gitIgnoredPatterns = sort'
+          { gitIgnoredPatterns = sortFst
             [("/", ["foo"]), ("/a/", ["**/*.xml"]), ("/a/b/", ["*.txt"])]
           , gitRepoRoot        = absRepo
           }
       result <- scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo
-      let result' =
-            result { gitIgnoredPatterns = sort' (gitIgnoredPatterns result) }
+      let result' = result
+            { gitIgnoredPatterns = sortFst (gitIgnoredPatterns result)
+            }
       result' `shouldBe` expected
 
     it "aborts scanning if given path is not valid GIT repo" $ do
@@ -79,7 +80,7 @@ spec = do
       scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo `shouldThrow` err
 
 
-  describe "isExcluded'" $ do
+  describe "isIgnored'" $ do
     it "checks whether given path is excluded" $ do
       absRepo <- makeAbsolute repo
       let git = Git
@@ -89,17 +90,17 @@ spec = do
                                    ]
             , gitRepoRoot        = absRepo
             }
-      isExcluded' git "foo/bar" `shouldReturn` False
-      isExcluded' git "a/hello.txt" `shouldReturn` False
-      isExcluded' git "a/hello.xml" `shouldReturn` True
-      isExcluded' git "a/b/hello.xml" `shouldReturn` True
-      isExcluded' git "/foo/bar" `shouldReturn` False
-      isExcluded' git "/a/hello.txt" `shouldReturn` False
-      isExcluded' git "/a/hello.xml" `shouldReturn` True
-      isExcluded' git "/a/b/hello.xml" `shouldReturn` True
-      isExcluded' git "/a/b/../hello.txt" `shouldReturn` False
-      isExcluded' git "/a/b/../hello.xml" `shouldReturn` True
+      isIgnored' git "foo/bar" `shouldReturn` False
+      isIgnored' git "a/hello.txt" `shouldReturn` False
+      isIgnored' git "a/hello.xml" `shouldReturn` True
+      isIgnored' git "a/b/hello.xml" `shouldReturn` True
+      isIgnored' git "/foo/bar" `shouldReturn` False
+      isIgnored' git "/a/hello.txt" `shouldReturn` False
+      isIgnored' git "/a/hello.xml" `shouldReturn` True
+      isIgnored' git "/a/b/hello.xml" `shouldReturn` True
+      isIgnored' git "/a/b/../hello.txt" `shouldReturn` False
+      isIgnored' git "/a/b/../hello.xml" `shouldReturn` True
 
 
-sort' :: Ord a => [(a, b)] -> [(a, b)]
-sort' = L.sortOn fst
+sortFst :: Ord a => [(a, b)] -> [(a, b)]
+sortFst = L.sortOn fst

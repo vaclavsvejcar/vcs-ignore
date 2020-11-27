@@ -56,6 +56,10 @@ spec = do
 
   describe "toPosixPath" $ do
     it "replaces any backward slashes with forward ones" $ do
-      let sample = "foo\\bar\\x"
-          expected = "foo/bar/x"
+      let sample   = "foo\\bar\\x.txt"
+          expected = "foo/bar/x.txt"
       toPosixPath sample `shouldBe` expected
+
+    it "keep forwars slashes as is" $ do
+      let sample = "foo/bar/x.txt"
+      toPosixPath sample `shouldBe` sample

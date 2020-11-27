@@ -1,6 +1,18 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns     #-}
 
+{-|
+Module      : Main
+Description : Simple application using the /vcs-ignore/ library
+Copyright   : (c) 2020 Vaclav Svejcar
+License     : BSD-3-Clause
+Maintainer  : vaclav.svejcar@gmail.com
+Stability   : experimental
+Portability : POSIX
+
+This simple application demonstrates the use of "vcs-ignore" library. It allows
+to check whether path given as argument is ignored within existing /GIT/ repo.
+-}
 
 module Main
   ( main
@@ -51,7 +63,7 @@ executeMode repo (oMode -> Path path) = checkPath repo path
 checkPath :: Repo r => r -> FilePath -> IO ()
 checkPath repo path = do
   relative <- makeRelative (repoRoot repo) <$> canonicalizePath path
-  excluded <- isExcluded repo relative
+  excluded <- isIgnored repo relative
   if excluded then reportIgnored else reportNotIgnored
  where
   reportIgnored = do

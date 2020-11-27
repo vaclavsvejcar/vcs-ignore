@@ -15,6 +15,10 @@ pretty:
 .PHONY: fresh
 fresh: clean build
 
+.PHONY: headroom
+headroom:
+	headroom run -c
+
 .PHONY: hlint
 hlint:
 	hlint ./app
@@ -22,7 +26,7 @@ hlint:
 	hlint ./test
 
 .PHONY: build
-build: hlint pretty
+build: hlint headroom pretty
 	stack build
 	stack test
 	stack haddock

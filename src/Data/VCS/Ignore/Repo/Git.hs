@@ -3,6 +3,20 @@
 {-# LANGUAGE StrictData          #-}
 {-# LANGUAGE TupleSections       #-}
 
+{-|
+Module      : Data.VCS.Ignore.Repo.Git
+Description : Implementation of 'Repo' for /GIT/
+Copyright   : (c) 2020 Vaclav Svejcar
+License     : BSD-3-Clause
+Maintainer  : vaclav.svejcar@gmail.com
+Stability   : experimental
+Portability : POSIX
+
+This module contains implementation of 'Repo' /type class/ for the /GIT/ content
+versioning system. Most of the public functions is exported only to make them
+visible for tests, end user of this library really shouldn't need to use them.
+-}
+
 module Data.VCS.Ignore.Repo.Git
   ( Git(..)
   , isGitRepo
@@ -13,7 +27,7 @@ module Data.VCS.Ignore.Repo.Git
   , repoPatterns
   , globalPatterns
   , scanRepo'
-  , isExcluded'
+  , isIgnored'
   )
 where
 
@@ -51,26 +65,43 @@ import qualified System.FilePath.Glob          as G
 
 ---------------------------------  DATA TYPES  ---------------------------------
 
+-- | Data type representing scanned instance of /GIT/ repository.
 data Git = Git
   { gitIgnoredPatterns :: [(FilePath, [G.Pattern])]
+  -- ^ patterns ignored at given repository paths
   , gitRepoRoot        :: FilePath
+  -- ^ absolute path to the repository root
   }
   deriving (Eq, Show)
 
 
 instance Repo Git where
-  repoRoot   = gitRepoRoot
-  scanRepo   = scanRepo' globalPatterns repoPatterns gitIgnorePatterns isGitRepo
-  isExcluded = isExcluded'
+  repoRoot  = gitRepoRoot
+  scanRepo  = scanRepo' globalPatterns repoPatterns gitIgnorePatterns isGitRepo
+  isIgnored = isIgnored'
 
 
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
 
-isGitRepo :: MonadIO m => FilePath -> m Bool
+-- | Checks whether given directory path is valid /GIT/ repository.
+isGitRepo :: MonadIO m
+          => FilePath
+          -- ^ path to the directory to check
+          -> m Bool
+          -- ^ @True@ if the given directory is valid /GIT/ repository
 isGitRepo path = liftIO . doesDirectoryExist $ path </> ".git"
 
 
-parsePatterns :: Text -> [G.Pattern]
+-- | Parses /Glob/ patterns from given text source. Each line in input text is
+-- considered to be single pattern. Lines starting with @#@ (comments) and blank
+-- lines are skipped.
+--
+-- >>> parsePatterns "*.xml\n.DS_Store"
+-- [compile "*.xml",compile ".DS_Store"]
+parsePatterns :: Text
+              -- ^ text to parse
+              -> [G.Pattern]
+              -- ^ parsed patterns
 parsePatterns = fmap (G.compile . T.unpack) . filter (not . excluded) . T.lines
  where
   excluded line = or $ fmap ($ T.stripStart line) [comment, emptyLine]
@@ -78,40 +109,76 @@ parsePatterns = fmap (G.compile . T.unpack) . filter (not . excluded) . T.lines
   emptyLine line = T.null line
 
 
-loadPatterns :: MonadIO m => FilePath -> m [G.Pattern]
+-- | Loads /Glob/ patterns from given text file. If the fille cannot be read for
+-- any reason, empty list is returned. See 'parsePatterns' for more details
+-- about parsing.
+loadPatterns :: MonadIO m
+             => FilePath
+             -- ^ path to text file to parse
+             -> m [G.Pattern]
+             -- ^ parsed /Glob/ patterns
 loadPatterns path = parsePatterns <$> liftIO content
  where
   content = catch (T.readFile path) (\(_ :: SomeException) -> pure T.empty)
 
 
-findGitIgnores :: MonadIO m => FilePath -> m [FilePath]
+-- | Recursively finds all @.gitignore@ files within the given directory path.
+findGitIgnores :: MonadIO m
+               => FilePath
+               -- ^ path to the directory to search in
+               -> m [FilePath]
+               -- ^ paths of found @.gitignore@ files
 findGitIgnores repoDir = findPaths repoDir isGitIgnore
   where isGitIgnore path = pure $ ".gitignore" `L.isSuffixOf` path
 
 
-gitIgnorePatterns :: MonadIO m => FilePath -> m [(FilePath, [G.Pattern])]
+-- | Recursively finds all @.gitignore@ files within the given directory path
+-- and parses them into /Glob/ patterns. See 'loadPatterns' and 'findGitIgnores'
+-- for more details.
+gitIgnorePatterns :: MonadIO m
+                  => FilePath
+                  -- ^ path to the directory to search @.gitignore@ files in
+                  -> m [(FilePath, [G.Pattern])]
+                  -- ^ list of @.gitignore@ paths and parsed /Glob/ patterns
 gitIgnorePatterns repoDir = do
   gitIgnores <- findGitIgnores repoDir
   mapM (\p -> (toPosixPath . path $ p, ) <$> loadPatterns p) gitIgnores
   where path p = stripSuffix' ".gitignore" $ stripPrefix' repoDir p
 
 
-repoPatterns :: MonadIO m => FilePath -> m [G.Pattern]
+-- | Loads /GIT/ repository specific ignore patterns, present in
+-- @REPO_ROOT\/info\/exclude@ file.
+repoPatterns :: MonadIO m
+             => FilePath
+             -- ^ path to the /GIT/ repository root
+             -> m [G.Pattern]
+             -- ^ parsed /Glob/ patterns
 repoPatterns repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
 
 
+-- | Loads global /GIT/  ignore patterns, present in
+-- @XDG_CONFIG_GOME\/git\/ignore@ file.
 globalPatterns :: MonadIO m => m [G.Pattern]
+               -- ^ parsed /Glob/ patterns
 globalPatterns =
   (liftIO . getXdgDirectory XdgConfig $ ("git" </> "ignore")) >>= loadPatterns
 
 
+-- | Internal version of 'scanRepo', where individual functions needs to be
+-- explicitly provided, which is useful mainly for testing purposes.
 scanRepo' :: (MonadIO m, MonadThrow m)
           => m [G.Pattern]
+          -- ^ reference to 'globalPatterns' function (or similar)
           -> (FilePath -> m [G.Pattern])
+          -- ^ reference to 'repoPatterns' function (or similar)
           -> (FilePath -> m [(FilePath, [G.Pattern])])
+          -- ^ reference to 'gitIgnorePatterns' function (or similar)
           -> (FilePath -> m Bool)
+          -- ^ reference to 'isGitRepo' function (or similar)
           -> FilePath
+          -- ^ path to /GIT/ repository root
           -> m Git
+          -- ^ scanned /Git/ repository
 scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
   absRepoDir <- liftIO $ makeAbsolute repoDir
   gitRepo    <- isGitRepoFn absRepoDir
@@ -132,8 +199,15 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
     in  (root, woRoot)
 
 
-isExcluded' :: MonadIO m => Git -> FilePath -> m Bool
-isExcluded' git@(Git patterns _) path = do
+-- | Internal version of 'isIgnored' function.
+isIgnored' :: MonadIO m
+           => Git
+           -- ^ scanned /GIT/ repository
+           -> FilePath
+           -- ^ path to check if ignored
+           -> m Bool
+           -- @True@ if given path is ignored
+isIgnored' git@(Git patterns _) path = do
   np <- toPosixPath <$> normalize (repoRoot git) path
   pure $ any (ignored np) (filtered np)
  where

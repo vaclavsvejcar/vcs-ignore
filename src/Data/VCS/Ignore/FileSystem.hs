@@ -1,4 +1,18 @@
 {-# LANGUAGE MultiWayIf #-}
+
+{-|
+Module      : Data.VCS.Ignore.FileSystem
+Description : Helper functions for working with file system
+Copyright   : (c) 2020 Vaclav Svejcar
+License     : BSD-3-Clause
+Maintainer  : vaclav.svejcar@gmail.com
+Stability   : experimental
+Portability : POSIX
+
+This module contains mainly helper functions, that are internally used by this
+library.
+-}
+
 module Data.VCS.Ignore.FileSystem
   ( findPaths
   , listPaths
@@ -24,26 +38,26 @@ import           System.Directory               ( doesDirectoryExist
 import           System.FilePath                ( (</>) )
 
 
--- | Recursively finds files on given path whose filename matches the predicate.
+-- | Recursively finds paths on given path whose filename matches the predicate.
 findPaths :: MonadIO m
           => FilePath
           -- ^ path to traverse
           -> (FilePath -> m Bool)
           -- ^ predicate to match filename (performing possible I/O actions)
           -> m [FilePath]
-          -- ^ list of found files
+          -- ^ list of found paths
 findPaths entryPath predicate = catMaybes <$> walkPaths entryPath process
  where
   process path = (\p -> if p then Just path else Nothing) <$> predicate path
 
 
--- | Recursively finds all files on given path. If file reference is passed
+-- | Recursively finds all paths on given path. If file reference is passed
 -- instead of directory, such path is returned.
 listPaths :: MonadIO m
           => FilePath
           -- ^ path to traverse
           -> m [FilePath]
-          -- ^ list of found files
+          -- ^ list of found paths
 listPaths entryPath = walkPaths entryPath pure
 
 
@@ -79,6 +93,17 @@ walkPaths entryPath fn = do
     pure $ concat paths
 
 
-toPosixPath :: FilePath -> FilePath
+-- | If the given path contains backward slashes (Windows style), converts them
+-- into forward ones (Unix style).
+--
+-- >>> toPosixPath "foo\\bar\\x.txt"
+-- "foo/bar/x.txt"
+--
+-- >>> toPosixPath "foo/bar/x.txt"
+-- "foo/bar/x.txt"
+toPosixPath :: FilePath
+            -- ^ input filepath to convert
+            -> FilePath
+            -- ^ output filepath
 toPosixPath = replace '\\' '/'
   where replace a b = fmap $ fromMaybe b . mfilter (/= a) . Just

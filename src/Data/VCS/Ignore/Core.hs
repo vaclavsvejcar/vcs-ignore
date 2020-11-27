@@ -1,6 +1,18 @@
 {-# LANGUAGE StrictData       #-}
 {-# LANGUAGE TypeApplications #-}
 
+{-|
+Module      : Data.VCS.Ignore.Core
+Description : Core operations over the repository
+Copyright   : (c) 2020 Vaclav Svejcar
+License     : BSD-3-Clause
+Maintainer  : vaclav.svejcar@gmail.com
+Stability   : experimental
+Portability : POSIX
+
+This module contains core operations you can perform over the scanned 'Repo'.
+-}
+
 module Data.VCS.Ignore.Core
   ( findRepo
   , listRepo
@@ -24,7 +36,14 @@ import           System.FilePath                ( pathSeparator
                                                 )
 
 
-findRepo :: (MonadIO m, Repo r) => FilePath -> m (Maybe r)
+-- | Attempts to find (and scan via 'scanRepo') repository at given path.
+-- If given path doesn't contain valid repository, it recursively tries in every
+-- parent directory until the root directory (e.g. @C:@ or @/@) is reached.
+findRepo :: (MonadIO m, Repo r)
+         => FilePath
+         -- ^ path where to start scanning
+         -> m (Maybe r)
+         -- ^ scanned 'Repo' (if found)
 findRepo = liftIO . go
  where
   go dir = do
@@ -36,11 +55,25 @@ findRepo = liftIO . go
       Right repo             -> pure . Just $ repo
 
 
-listRepo :: (MonadIO m, Repo r) => r -> m [FilePath]
+-- | Resursively lists all non-ignored paths withing the given repository
+-- (both files and directories).
+listRepo :: (MonadIO m, Repo r)
+         => r
+         -- ^ repository to list
+         -> m [FilePath]
+         -- ^ list of non-ignored paths within the repository
 listRepo repo = walkRepo repo pure
 
 
-walkRepo :: (MonadIO m, Repo r) => r -> (FilePath -> m a) -> m [a]
+-- | Similar to 'listRepo', but allows to perform any action on every
+-- non-ignored path within the repository.
+walkRepo :: (MonadIO m, Repo r)
+         => r
+         -- ^ repository to walk
+         -> (FilePath -> m a)
+         -- ^ action to perform on every non-excluded filepath
+         -> m [a]
+         -- ^ list of paths transformed by the action function
 walkRepo repo fn = do
   let search path | L.null path = pure Nothing
                   | otherwise   = doSearch path
@@ -51,5 +84,5 @@ walkRepo repo fn = do
   root'        = if ps `L.isSuffixOf` root then root else root <> ps
   relativePath = dropPrefix root'
   dropPrefix   = \prefix t -> fromMaybe t (L.stripPrefix prefix t)
-  doSearch     = \path -> isExcluded repo path >>= process path
+  doSearch     = \path -> isIgnored repo path >>= process path
   process      = \path x -> if x then pure Nothing else Just <$> fn path
