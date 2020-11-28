@@ -238,5 +238,7 @@ stripSuffix' suffix str =
 normalize :: MonadIO m => FilePath -> FilePath -> m FilePath
 normalize repoDir path = do
   canonicalized <- liftIO . canonicalizePath $ repoDir </> stripPrefix' "/" path
-  pure $ makeRelative repoDir canonicalized
+  isDir         <- liftIO $ doesDirectoryExist canonicalized
+  let suffix = if isDir || "/" `L.isSuffixOf` path then "/" else ""
+  pure $ makeRelative repoDir canonicalized <> suffix
 
