@@ -67,9 +67,8 @@ spec = do
           , gitRepoRoot        = absRepo
           }
       result <- scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo
-      let result' = result
-            { gitIgnoredPatterns = sortFst (gitIgnoredPatterns result)
-            }
+      let result' =
+            result { gitIgnoredPatterns = sortFst (gitIgnoredPatterns result) }
       result' `shouldBe` expected
 
     it "aborts scanning if given path is not valid GIT repo" $ do
