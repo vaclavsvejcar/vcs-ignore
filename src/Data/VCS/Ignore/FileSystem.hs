@@ -3,7 +3,7 @@
 {-|
 Module      : Data.VCS.Ignore.FileSystem
 Description : Helper functions for working with file system
-Copyright   : (c) 2020 Vaclav Svejcar
+Copyright   : (c) 2020-2021 Vaclav Svejcar
 License     : BSD-3-Clause
 Maintainer  : vaclav.svejcar@gmail.com
 Stability   : experimental

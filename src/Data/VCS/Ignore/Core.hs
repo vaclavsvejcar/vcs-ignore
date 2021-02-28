@@ -4,7 +4,7 @@
 {-|
 Module      : Data.VCS.Ignore.Core
 Description : Core operations over the repository
-Copyright   : (c) 2020 Vaclav Svejcar
+Copyright   : (c) 2020-2021 Vaclav Svejcar
 License     : BSD-3-Clause
 Maintainer  : vaclav.svejcar@gmail.com
 Stability   : experimental
