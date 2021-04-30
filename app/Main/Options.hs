@@ -9,7 +9,7 @@ Maintainer  : vaclav.svejcar@gmail.com
 Stability   : experimental
 Portability : POSIX
 
-Options definitions for "optparse-applicative"
+Options definitions for "optparse-applicative".
 -}
 
 module Main.Options
@@ -19,7 +19,11 @@ module Main.Options
   )
 where
 
+import           Main.Vendor                    ( productDesc
+                                                , productInfo
+                                                )
 import           Options.Applicative
+
 
 data Options = Options
   { oMode :: Mode
@@ -32,7 +36,7 @@ data Mode = Path FilePath
 
 optionsParser :: ParserInfo Options
 optionsParser = info (options <**> helper)
-                     (fullDesc <> progDesc "progDesc" <> header "header")
+                     (fullDesc <> progDesc productDesc <> header productInfo)
  where
   options =
     Options

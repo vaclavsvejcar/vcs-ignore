@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a78f13bbd35355dfbb7e61733f7fd03323c14911b4ef98093cbce9ec1f07bcdd
+-- hash: d6297fd77dae9be3527042abde7f4edbdfd19282da335ca48836a63264bffe97
 
 name:           vcs-ignore
 version:        0.0.1.0
@@ -52,6 +52,7 @@ executable ignore
   main-is: Main.hs
   other-modules:
       Main.Options
+      Main.Vendor
       Paths_vcs_ignore
   hs-source-dirs:
       app
