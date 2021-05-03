@@ -1,25 +1,36 @@
-cabal-version: 1.12
+cabal-version: 2.2
 
 -- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d6297fd77dae9be3527042abde7f4edbdfd19282da335ca48836a63264bffe97
+-- hash: d9de8e2039e4b19b3eec3d8eadb0591de0d9ce137cdf542380a1e496d8f3ad58
 
 name:           vcs-ignore
 version:        0.0.1.0
-description:    Please see the README on GitHub at <https://github.com/vaclavsvejcar/vcs-ignore#readme>
-homepage:       https://github.com/vaclavsvejcar/headroom#readme
+synopsis:       Library for handling files ignored by VCS systems.
+description:    vcs-ignore is small Haskell library used to find, check and process files ignored by selected VCS.
+category:       Development
+homepage:       https://github.com/vaclavsvejcar/headroom
 bug-reports:    https://github.com/vaclavsvejcar/headroom/issues
 author:         Vaclav Svejcar
 maintainer:     vaclav.svejcar@gmail.com
 copyright:      Copyright (c) 2020 Vaclav Svejcar
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
+    test-data/fake-git-repo/.gitignore
+    test-data/fake-git-repo/a/test-a.txt
+    test-data/fake-git-repo/a/test-a.xml
+    test-data/fake-git-repo/a/b/test-b.txt
+    test-data/fake-git-repo/a/b/test-b.xml
+    test-data/list-files/a.txt
+    test-data/list-files/dir1/b.txt
+    test-data/list-files/dir1/dir2/c.txt
+    test-data/list-files/dir1/dir2/d.xml
 
 source-repository head
   type: git
@@ -34,6 +45,8 @@ library
       Data.VCS.Ignore.Repo.Git
       Data.VCS.Ignore.Types
   other-modules:
+      Paths_vcs_ignore
+  autogen-modules:
       Paths_vcs_ignore
   hs-source-dirs:
       src
