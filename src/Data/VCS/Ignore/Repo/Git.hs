@@ -76,6 +76,7 @@ data Git = Git
 
 
 instance Repo Git where
+  repoName  = const "GIT"
   repoRoot  = gitRepoRoot
   scanRepo  = scanRepo' globalPatterns repoPatterns gitIgnorePatterns isGitRepo
   isIgnored = isIgnored'
