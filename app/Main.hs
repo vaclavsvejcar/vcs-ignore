@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards  #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns     #-}
 
@@ -19,6 +20,7 @@ module Main
   )
 where
 
+import           Control.Monad                  ( when )
 import           Data.VCS.Ignore.Core           ( findRepo )
 import           Data.VCS.Ignore.Repo           ( Repo(..) )
 import           Data.VCS.Ignore.Repo.Git       ( Git )
@@ -39,17 +41,18 @@ import           System.FilePath                ( makeRelative )
 main :: IO ()
 main = do
   options <- execParser optionsParser
-  repo    <- findRepoOrFail @Git
+  repo    <- findRepoOrFail @Git options
   executeMode repo options
 
 
-findRepoOrFail :: Repo r => IO r
-findRepoOrFail = do
+findRepoOrFail :: (Repo r, Show r) => Options -> IO r
+findRepoOrFail Options {..} = do
   repoDir   <- getCurrentDirectory
   maybeRepo <- findRepo repoDir
   case maybeRepo of
     Just repo -> do
       putStrLn $ "Found repository at: " <> repoRoot repo
+      when oDebug (putStrLn $ "Repository details: " <> show repo)
       pure repo
     Nothing -> do
       putStrLn $ "No repository found for path: " <> repoDir

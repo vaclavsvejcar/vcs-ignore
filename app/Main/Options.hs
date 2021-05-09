@@ -26,7 +26,8 @@ import           Options.Applicative
 
 
 data Options = Options
-  { oMode :: Mode
+  { oMode  :: Mode
+  , oDebug :: Bool
   }
   deriving (Eq, Show)
 
@@ -46,3 +47,4 @@ optionsParser = info (options <**> helper)
                   "path to check"
                 )
           )
+      <*> switch (long "debug" <> help "produce more verbose output")
