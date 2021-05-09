@@ -1,10 +1,6 @@
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Data.VCS.Ignore.Repo.GitSpec
-  ( spec
-  )
-where
+module Data.VCS.Ignore.Repo.GitSpec where
 
 import qualified Data.List                     as L
 import qualified Data.Text                     as T
@@ -18,6 +14,40 @@ import           Test.Hspec
 spec :: Spec
 spec = do
   let repo = "test-data" </> "fake-git-repo"
+
+  describe "compilePattern" $ do
+    it "compiles negated pattern" $ do
+      compilePattern "!/foo/bar"
+        `shouldBe` Pattern ["/foo/bar", "/foo/bar/**"] "!/foo/bar" True
+
+    it "compiles pattern matching files or directories inside path" $ do
+      compilePattern ".hidden"
+        `shouldBe` Pattern ["**/.hidden", "**/.hidden/**"] ".hidden" False
+      compilePattern ".hidden/"
+        `shouldBe` Pattern ["**/.hidden/**"] ".hidden/" False
+
+
+  describe "matchesPattern" $ do
+    it "matches all content in subdirectory" $ do
+      matchesPattern (compilePattern "/foo/*") "/foo" `shouldBe` False
+      matchesPattern (compilePattern "/foo/*") "/foo/bar" `shouldBe` True
+
+    it "matches all content in all subdirectories" $ do
+      matchesPattern (compilePattern "/foo/**") "/foo/bar" `shouldBe` True
+      matchesPattern (compilePattern "/foo/**") "/foo/bar/c" `shouldBe` True
+
+    it "matches negated pattern" $ do
+      matchesPattern (compilePattern "!/foo/*") "/foo" `shouldBe` False
+      matchesPattern (compilePattern "!/foo/*") "/foo/bar" `shouldBe` True
+
+    it "matches dir pattern anywhere in the path" $ do
+      matchesPattern (compilePattern "bar/") "/foo/bar/x" `shouldBe` True
+      matchesPattern (compilePattern "bar/") "/foo/bar" `shouldBe` False
+
+    it "matches dir or file pattern anywhere in the path" $ do
+      matchesPattern (compilePattern "bar") "/foo/bar/x" `shouldBe` True
+      matchesPattern (compilePattern "bar") "/foo/bar" `shouldBe` True
+
 
   describe "parsePatterns" $ do
     it "parses glob patterns from input text (pattern per line)" $ do
@@ -62,13 +92,12 @@ spec = do
         fn2      = const $ pure []
         fn3      = const $ pure True
         expected = Git
-          { gitIgnoredPatterns = sortFst
+          { gitPatterns = sortFst
             [("/", ["foo"]), ("/a/", ["**/*.xml"]), ("/a/b/", ["*.txt"])]
-          , gitRepoRoot        = absRepo
+          , gitRepoRoot = absRepo
           }
       result <- scanRepo' fn1 fn2 gitIgnorePatterns fn3 repo
-      let result' =
-            result { gitIgnoredPatterns = sortFst (gitIgnoredPatterns result) }
+      let result' = result { gitPatterns = sortFst (gitPatterns result) }
       result' `shouldBe` expected
 
     it "aborts scanning if given path is not valid GIT repo" $ do
@@ -83,22 +112,27 @@ spec = do
     it "checks whether given path is excluded" $ do
       absRepo <- makeAbsolute repo
       let git = Git
-            { gitIgnoredPatterns = [ ("/"    , [])
-                                   , ("/a/"  , ["**/*.xml"])
-                                   , ("/a/b/", ["*.txt"])
-                                   ]
-            , gitRepoRoot        = absRepo
+            { gitPatterns = [ ("/"    , ["!keep.xml", ".hidden/", ".hid"])
+                            , ("/a/"  , ["**/*.xml"])
+                            , ("/a/b/", ["*.txt"])
+                            ]
+            , gitRepoRoot = absRepo
             }
       isIgnored' git "foo/bar" `shouldReturn` False
       isIgnored' git "a/hello.txt" `shouldReturn` False
       isIgnored' git "a/hello.xml" `shouldReturn` True
       isIgnored' git "a/b/hello.xml" `shouldReturn` True
+      isIgnored' git "a/b/keep.xml" `shouldReturn` False
       isIgnored' git "/foo/bar" `shouldReturn` False
       isIgnored' git "/a/hello.txt" `shouldReturn` False
       isIgnored' git "/a/hello.xml" `shouldReturn` True
       isIgnored' git "/a/b/hello.xml" `shouldReturn` True
       isIgnored' git "/a/b/../hello.txt" `shouldReturn` False
       isIgnored' git "/a/b/../hello.xml" `shouldReturn` True
+      isIgnored' git "/a/b/.hidden" `shouldReturn` False
+      isIgnored' git "/a/b/.hidden/foo" `shouldReturn` True
+      isIgnored' git "/a/b/.hid" `shouldReturn` True
+      isIgnored' git "/a/b/.hid/foo" `shouldReturn` True
 
 
 sortFst :: Ord a => [(a, b)] -> [(a, b)]
