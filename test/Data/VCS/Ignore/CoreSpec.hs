@@ -76,6 +76,7 @@ data TestRepo = TestRepo
   deriving (Eq, Show)
 
 instance Repo TestRepo where
+  repoName = const "TestRepo"
   repoRoot TestRepo {..} = trPath
   scanRepo path | path == testRepoRoot = pure TestRepo { trPath = path }
                 | otherwise            = throwM $ InvalidRepo path "err"

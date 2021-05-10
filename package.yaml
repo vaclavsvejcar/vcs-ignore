@@ -1,12 +1,12 @@
 name: vcs-ignore
 version: 0.0.1.0
-homepage: https://github.com/vaclavsvejcar/headroom
+homepage: https://github.com/vaclavsvejcar/vcs-ignore
 license: BSD-3-Clause
 license-file: LICENSE
-github: vaclavsvejcar/headroom
+github: vaclavsvejcar/vcs-ignore
 author: Vaclav Svejcar
 maintainer: vaclav.svejcar@gmail.com
-copyright: Copyright (c) 2020 Vaclav Svejcar
+copyright: Copyright (c) 2020-2021 Vaclav Svejcar
 category: Development
 
 synopsis: Library for handling files ignored by VCS systems.
@@ -20,7 +20,9 @@ extra-source-files:
   - CHANGELOG.md
   - test-data/fake-git-repo/.gitignore
   - test-data/fake-git-repo/a/*
+  - test-data/fake-git-repo/a/.gitignore
   - test-data/fake-git-repo/a/b/*
+  - test-data/fake-git-repo/a/b/.gitignore
   - test-data/list-files/*
   - test-data/list-files/dir1/*
   - test-data/list-files/dir1/dir2/*
@@ -31,7 +33,6 @@ dependencies:
   - directory
   - exceptions
   - filepath
-  - Glob
   - text
 
 ghc-options:
@@ -49,6 +50,7 @@ library:
   generated-other-modules: Paths_vcs_ignore
   source-dirs: src
   dependencies:
+    - Glob
     - text
 
 executables:
