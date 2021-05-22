@@ -7,15 +7,17 @@
 <!-- TOC -->
 
 - [1. Table of Contents](#1-table-of-contents)
-- [2. Example of Use](#2-example-of-use)
+- [2. Use as Library](#2-use-as-library)
     - [2.1. Listing all files/directories ignored by VCS](#21-listing-all-filesdirectories-ignored-by-vcs)
     - [2.2. Walking files/directories ignored by VCS](#22-walking-filesdirectories-ignored-by-vcs)
     - [2.3. Checking if path is ignored by VCS](#23-checking-if-path-is-ignored-by-vcs)
+- [3. Use as Executable](#3-use-as-executable)
+    - [3.1. Checking if path is ignored by VCS](#31-checking-if-path-is-ignored-by-vcs)
 
 <!-- /TOC -->
 
 
-## 2. Example of Use
+## 2. Use as Library
 Because this library is really simple to use, following example should be enough to understand how to use it for your project.
 
 ### 2.1. Listing all files/directories ignored by VCS
@@ -66,3 +68,33 @@ checkIgnored = do
   repo <- scanRepo @Git "path/to/repo"
   isIgnored repo "/some/path/.DS_Store"
 ```
+
+## 3. Use as Executable
+While `vcs-ignore` is mainly intended to be used as a library, it also comes with small executable called `ignore` that can be used standalone to verify whether given path is ignored or not.
+
+```
+─$ ignore --help
+vcs-ignore, v0.0.2.0 :: https://github.com/vaclavsvejcar/vcs-ignore
+
+Usage: ignore (-p|--path PATH) [--debug]
+  library for handling files ignored by VCS systems
+
+Available options:
+  -p,--path PATH           path to check
+  --debug                  produce more verbose output
+  -h,--help                Show this help text
+```
+
+### 3.1. Checking if path is ignored by VCS
+To verify if path is ignored by _VCS_, just call the `ignore` executable with `-p` parameter inside the _VCS_ repository like this:
+
+```
+$ ignore -p .stack-work/some-file
+Found repository at: /path/to/repo
+Path '.stack-work/some-file' IS NOT ignored
+
+$ echo $?
+1
+```
+
+As you can see, `ignore` executable prints result in human readable form as well as it sets the exit code to `1` if the file is __not__ ignored.
