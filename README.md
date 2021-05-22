@@ -1,4 +1,6 @@
 ![CI](https://github.com/vaclavsvejcar/vcs-ignore/workflows/CI/badge.svg)
+[![Hackage version](http://img.shields.io/hackage/v/vcs-ignore.svg)](https://hackage.haskell.org/package/vcs-ignore)
+[![Stackage version](https://www.stackage.org/package/vcs-ignore/badge/lts?label=Stackage)](https://www.stackage.org/package/vcs-ignore)
 
 # vcs-ignore
 `vcs-ignore` is small Haskell library used to find, check and process files ignored by selected _VCS_.
