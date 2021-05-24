@@ -19,7 +19,8 @@ module Main.Options
   )
 where
 
-import           Main.Vendor                    ( productDesc
+import           Main.Vendor                    ( buildVersion
+                                                , productDesc
                                                 , productInfo
                                                 )
 import           Options.Applicative
@@ -36,7 +37,7 @@ data Mode = Path FilePath
 
 
 optionsParser :: ParserInfo Options
-optionsParser = info (options <**> helper)
+optionsParser = info (options <**> versionP <**> helper)
                      (fullDesc <> progDesc productDesc <> header productInfo)
  where
   options =
@@ -48,3 +49,14 @@ optionsParser = info (options <**> helper)
                 )
           )
       <*> switch (long "debug" <> help "produce more verbose output")
+
+
+versionP :: Parser (a -> a)
+versionP = versionInfoP <*> versionNumP
+ where
+  versionInfoP = infoOption
+    productInfo
+    (long "version" <> short 'v' <> help "show version info")
+  versionNumP = infoOption
+    buildVersion
+    (long "numeric-version" <> help "show only version number")

@@ -75,15 +75,17 @@ checkIgnored = do
 While `vcs-ignore` is mainly intended to be used as a library, it also comes with small executable called `ignore` that can be used standalone to verify whether given path is ignored or not.
 
 ```
-─$ ignore --help
+$ ignore --help
 vcs-ignore, v0.0.2.0 :: https://github.com/vaclavsvejcar/vcs-ignore
 
-Usage: ignore (-p|--path PATH) [--debug]
+Usage: ignore (-p|--path PATH) [--debug] [-v|--version] [--numeric-version]
   library for handling files ignored by VCS systems
 
 Available options:
   -p,--path PATH           path to check
   --debug                  produce more verbose output
+  -v,--version             show version info
+  --numeric-version        show only version number
   -h,--help                Show this help text
 ```
 
