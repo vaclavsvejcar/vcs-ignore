@@ -49,6 +49,7 @@
 - ignore: { name: "Use newtype instead of data" }
 - ignore: { name: Redundant do, within: spec }
 - ignore: { name: Reduce duplication, within: spec }
+- ignore: { name: "Redundant lambda" }
 # Define some custom infix operators
 # - fixity: infixr 3 ~^#^~
 
