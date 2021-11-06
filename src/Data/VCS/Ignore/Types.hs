@@ -42,10 +42,8 @@ instance Exception VCSIgnoreError where
 
 -- | Unwraps given exception from 'VCSIgnoreError'.
 fromVCSIgnoreError :: Exception e
-                   => SomeException
-                   -- ^ exception to unwrap
-                   -> Maybe e
-                   -- ^ unwrapped exception
+                   => SomeException -- ^ exception to unwrap
+                   -> Maybe e       -- ^ unwrapped exception
 fromVCSIgnoreError e = do
   VCSIgnoreError e' <- fromException e
   cast e'
@@ -53,8 +51,6 @@ fromVCSIgnoreError e = do
 
 -- | Wraps given exception from 'VCSIgnoreError'.
 toVCSIgnoreError :: Exception e
-                 => e
-                 -- ^ exception to wrap
-                 -> SomeException
-                 -- ^ wrapped exception
+                 => e             -- ^ exception to wrap
+                 -> SomeException -- ^ wrapped exception
 toVCSIgnoreError = toException . VCSIgnoreError

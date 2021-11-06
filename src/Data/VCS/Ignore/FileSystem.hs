@@ -40,12 +40,9 @@ import           System.FilePath                ( (</>) )
 
 -- | Recursively finds paths on given path whose filename matches the predicate.
 findPaths :: MonadIO m
-          => FilePath
-          -- ^ path to traverse
-          -> (FilePath -> m Bool)
-          -- ^ predicate to match filename (performing possible I/O actions)
-          -> m [FilePath]
-          -- ^ list of found paths
+          => FilePath             -- ^ path to traverse
+          -> (FilePath -> m Bool) -- ^ predicate to match filename
+          -> m [FilePath]         -- ^ list of found paths
 findPaths entryPath predicate = catMaybes <$> walkPaths entryPath process
  where
   process path = (\p -> if p then Just path else Nothing) <$> predicate path
@@ -54,10 +51,8 @@ findPaths entryPath predicate = catMaybes <$> walkPaths entryPath process
 -- | Recursively finds all paths on given path. If file reference is passed
 -- instead of directory, such path is returned.
 listPaths :: MonadIO m
-          => FilePath
-          -- ^ path to traverse
-          -> m [FilePath]
-          -- ^ list of found paths
+          => FilePath      -- ^ path to traverse
+          -> m [FilePath]  -- ^ list of found paths
 listPaths entryPath = walkPaths entryPath pure
 
 
@@ -70,12 +65,9 @@ listPaths entryPath = walkPaths entryPath pure
 --     recursively processed and returned.
 --   * If the given __path doesn't exist__, empy list will be returned.
 walkPaths :: MonadIO m
-          => FilePath
-          -- ^ path to traverse
-          -> (FilePath -> m a)
-          -- ^ function to process path (performing possible I/O actions)
-          -> m [a]
-          -- ^ result of traversed & processed paths
+          => FilePath          -- ^ path to traverse
+          -> (FilePath -> m a) -- ^ function to process path
+          -> m [a]             -- ^ result of traversed & processed paths
 walkPaths entryPath fn = do
   isDir  <- liftIO $ doesDirectoryExist entryPath
   isFile <- liftIO $ doesFileExist entryPath
@@ -101,9 +93,7 @@ walkPaths entryPath fn = do
 --
 -- >>> toPosixPath "foo/bar/x.txt"
 -- "foo/bar/x.txt"
-toPosixPath :: FilePath
-            -- ^ input filepath to convert
-            -> FilePath
-            -- ^ output filepath
+toPosixPath :: FilePath -- ^ input filepath to convert
+            -> FilePath -- ^ output filepath
 toPosixPath = replace '\\' '/'
   where replace a b = fmap $ fromMaybe b . mfilter (/= a) . Just

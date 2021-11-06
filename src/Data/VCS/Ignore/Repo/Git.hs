@@ -72,10 +72,8 @@ import qualified System.FilePath.Glob          as G
 
 -- | Data type representing scanned instance of /GIT/ repository.
 data Git = Git
-  { gitRepoRoot :: FilePath
-  -- ^ absolute path to the repository root
-  , gitPatterns :: [(FilePath, [Pattern])]
-  -- ^ patterns ignored at given repository paths
+  { gitRepoRoot :: FilePath                -- ^ absolute path to the repository
+  , gitPatterns :: [(FilePath, [Pattern])] -- ^ ignored patterns
   }
   deriving (Eq, Show)
 
@@ -87,12 +85,9 @@ instance Repo Git where
 
 -- | Represents single pattern to be used as a rule for ignoring paths.
 data Pattern = Pattern
-  { pPatterns  :: [G.Pattern]
-  -- ^ underlying implementation
-  , pRaw       :: Text
-  -- ^ raw textual representation of the pattern
-  , pIsNegated :: Bool
-  -- ^ whether the pattern is the negation (starts with @!@)
+  { pPatterns  :: [G.Pattern] -- ^ underlying implementation
+  , pRaw       :: Text        -- ^ raw textual representation of the pattern
+  , pIsNegated :: Bool        -- ^ if the pattern is negation (starts with @!@)
   }
   deriving (Eq, Show)
 
@@ -103,10 +98,8 @@ instance IsString Pattern where
 ------------------------------  PUBLIC FUNCTIONS  ------------------------------
 
 -- | Compiles pattern.
-compilePattern :: Text
-               -- ^ raw pattern as text
-               -> Pattern
-               -- ^ compiled pattern
+compilePattern :: Text    -- ^ raw pattern as text
+               -> Pattern -- ^ compiled pattern
 compilePattern raw =
   let woPrefix = fromMaybe raw $ T.stripPrefix "!" raw
       patterns = r2 . r1 $ woPrefix
@@ -123,12 +116,9 @@ compilePattern raw =
 
 
 -- | Tests whether given path matches against the pattern.
-matchesPattern :: Pattern
-               -- ^ pattern to match against
-               -> FilePath
-               -- ^ path to check
-               -> Bool
-               -- ^ check result
+matchesPattern :: Pattern  -- ^ pattern to match against
+               -> FilePath -- ^ path to check
+               -> Bool     -- ^ check result
 matchesPattern ptn path = any (`G.match` path) (pPatterns ptn)
 
 
@@ -138,10 +128,8 @@ matchesPattern ptn path = any (`G.match` path) (pPatterns ptn)
 --
 -- >>> parsePatterns "*.xml\n.DS_Store"
 -- [Pattern {pPatterns = [compile "*.xml",compile "*.xml/*"], pRaw = "*.xml", pIsNegated = False},Pattern {pPatterns = [compile "**/.DS_Store",compile "**/.DS_Store/*"], pRaw = ".DS_Store", pIsNegated = False}]
-parsePatterns :: Text
-              -- ^ text to parse
-              -> [Pattern]
-              -- ^ parsed patterns
+parsePatterns :: Text      -- ^ text to parse
+              -> [Pattern] -- ^ parsed patterns
 parsePatterns = fmap compilePattern . filter (not . excluded) . T.lines
  where
   excluded = \line -> or $ fmap ($ T.stripStart line) [comment, T.null]
@@ -152,10 +140,8 @@ parsePatterns = fmap compilePattern . filter (not . excluded) . T.lines
 -- any reason, empty list is returned. See 'parsePatterns' for more details
 -- about parsing.
 loadPatterns :: MonadIO m
-             => FilePath
-             -- ^ path to text file to parse
-             -> m [Pattern]
-             -- ^ parsed /Glob/ patterns
+             => FilePath    -- ^ path to text file to parse
+             -> m [Pattern] -- ^ parsed /Glob/ patterns
 loadPatterns path = parsePatterns <$> liftIO content
  where
   content = catch (T.readFile path) (\(_ :: SomeException) -> pure T.empty)
@@ -163,10 +149,8 @@ loadPatterns path = parsePatterns <$> liftIO content
 
 -- | Recursively finds all @.gitignore@ files within the given directory path.
 findGitIgnores :: MonadIO m
-               => FilePath
-               -- ^ path to the directory to search in
-               -> m [FilePath]
-               -- ^ paths of found @.gitignore@ files
+               => FilePath     -- ^ path to the directory to search in
+               -> m [FilePath] -- ^ paths of found @.gitignore@ files
 findGitIgnores repoDir = findPaths repoDir isGitIgnore
   where isGitIgnore path = pure $ ".gitignore" `L.isSuffixOf` path
 
@@ -188,17 +172,14 @@ gitIgnorePatterns repoDir = do
 -- | Loads /GIT/ repository specific ignore patterns, present in
 -- @REPO_ROOT\/info\/exclude@ file.
 repoPatterns :: MonadIO m
-             => FilePath
-             -- ^ path to the /GIT/ repository root
-             -> m [Pattern]
-             -- ^ parsed /Glob/ patterns
+             => FilePath    -- ^ path to the /GIT/ repository root
+             -> m [Pattern] -- ^ parsed /Glob/ patterns
 repoPatterns repoDir = loadPatterns $ repoDir </> "info" </> "exclude"
 
 
 -- | Loads global /GIT/  ignore patterns, present in
 -- @XDG_CONFIG_GOME\/git\/ignore@ file.
 globalPatterns :: MonadIO m => m [Pattern]
-               -- ^ parsed /Glob/ patterns
 globalPatterns =
   (liftIO . getXdgDirectory XdgConfig $ ("git" </> "ignore")) >>= loadPatterns
 
@@ -240,12 +221,9 @@ scanRepo' globalPatternsFn repoPatternsFn gitIgnoresFn isGitRepoFn repoDir = do
 
 -- | Internal version of 'isIgnored' function.
 isIgnored' :: MonadIO m
-           => Git
-           -- ^ scanned /GIT/ repository
-           -> FilePath
-           -- ^ path to check if ignored
-           -> m Bool
-           -- @True@ if given path is ignored
+           => Git      -- ^ scanned /GIT/ repository
+           -> FilePath -- ^ path to check if ignored
+           -> m Bool   -- @True@ if given path is ignored
 isIgnored' git@(Git _ patterns) path = do
   np <- toPosixPath <$> normalize (repoRoot git) path
   let ignored = any (check2 np False) (filtered np)
@@ -264,10 +242,8 @@ isIgnored' git@(Git _ patterns) path = do
 
 -- | Checks whether given directory path is valid /GIT/ repository.
 isGitRepo :: MonadIO m
-          => FilePath
-          -- ^ path to the directory to check
-          -> m Bool
-          -- ^ @True@ if the given directory is valid /GIT/ repository
+          => FilePath -- ^ path to the directory to check
+          -> m Bool   -- ^ @True@ if the given directory is valid repository
 isGitRepo path = liftIO . doesDirectoryExist $ path </> ".git"
 
 

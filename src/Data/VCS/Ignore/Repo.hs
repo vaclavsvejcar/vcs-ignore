@@ -37,35 +37,26 @@ import           Data.VCS.Ignore.Types          ( fromVCSIgnoreError
 class Repo r where
 
   -- | Returns name of the repository (e.g. @GIT@).
-  repoName :: r
-           -- ^ /VCS/ repository instance
-           -> Text
-           -- ^ name of the repository
+  repoName :: r    -- ^ /VCS/ repository instance
+           -> Text -- ^ name of the repository
 
   -- | Returns absolute path to the root of the /VCS/ repository.
-  repoRoot :: r
-           -- ^ /VCS/ repository instance
-           -> FilePath
-           -- ^ absolute path to the repository
+  repoRoot :: r        -- ^ /VCS/ repository instance
+           -> FilePath -- ^ absolute path to the repository
 
   -- | Scans repository at given path. If the given path doesn't contain valid
   -- repository, 'RepoError' may be thrown.
   scanRepo :: (MonadIO m, MonadThrow m)
-           => FilePath
-           -- ^ path to the /VCS/ repository root
-           -> m r
-           -- ^ scanned repository (or failure)
+           => FilePath -- ^ path to the /VCS/ repository root
+           -> m r      -- ^ scanned repository (or failure)
 
   -- | Checks whether the given path is ignored. The input path is expected to
   -- be relative to the repository root, it might or might not point to existing
   -- file or directory.
   isIgnored :: MonadIO m
-            => r
-            -- ^ /VCS/ repository instance
-            -> FilePath
-            -- ^ path to check, relative to the repository root
-            -> m Bool
-            -- ^ whether the path is ignored or not
+            => r        -- ^ /VCS/ repository instance
+            -> FilePath -- ^ path to check, relative to the repository root
+            -> m Bool   -- ^ whether the path is ignored or not
 
 
 -- | Represents error related to operations over the /VCS/ repository.

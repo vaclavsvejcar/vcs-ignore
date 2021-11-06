@@ -40,10 +40,8 @@ import           System.FilePath                ( pathSeparator
 -- If given path doesn't contain valid repository, it recursively tries in every
 -- parent directory until the root directory (e.g. @C:@ or @/@) is reached.
 findRepo :: (MonadIO m, Repo r)
-         => FilePath
-         -- ^ path where to start scanning
-         -> m (Maybe r)
-         -- ^ scanned 'Repo' (if found)
+         => FilePath    -- ^ path where to start scanning
+         -> m (Maybe r) -- ^ scanned 'Repo' (if found)
 findRepo = liftIO . go
  where
   go dir = do
@@ -58,22 +56,17 @@ findRepo = liftIO . go
 -- | Resursively lists all non-ignored paths withing the given repository
 -- (both files and directories).
 listRepo :: (MonadIO m, Repo r)
-         => r
-         -- ^ repository to list
-         -> m [FilePath]
-         -- ^ list of non-ignored paths within the repository
+         => r            -- ^ repository to list
+         -> m [FilePath] -- ^ list of non-ignored paths within the repository
 listRepo repo = walkRepo repo pure
 
 
 -- | Similar to 'listRepo', but allows to perform any action on every
 -- non-ignored path within the repository.
 walkRepo :: (MonadIO m, Repo r)
-         => r
-         -- ^ repository to walk
-         -> (FilePath -> m a)
-         -- ^ action to perform on every non-excluded filepath
-         -> m [a]
-         -- ^ list of paths transformed by the action function
+         => r                 -- ^ repository to walk
+         -> (FilePath -> m a) -- ^ action to do on every non-excluded filepath
+         -> m [a]             -- ^ list of transformed paths
 walkRepo repo fn = do
   let search path | L.null path = pure Nothing
                   | otherwise   = doSearch path
