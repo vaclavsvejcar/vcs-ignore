@@ -55,7 +55,6 @@ import           Data.VCS.Ignore.FileSystem     ( findPaths
                                                 , toPosixPath
                                                 )
 import           Data.VCS.Ignore.Repo           ( Repo(..)
-                                                , Repo(..)
                                                 , RepoError(..)
                                                 )
 import           System.Directory               ( XdgDirectory(XdgConfig)
