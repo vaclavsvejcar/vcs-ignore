@@ -5,7 +5,7 @@
 {-|
 Module      : Main
 Description : Simple application using the /vcs-ignore/ library
-Copyright   : (c) 2020-2021 Vaclav Svejcar
+Copyright   : (c) 2020-2022 Vaclav Svejcar
 License     : BSD-3-Clause
 Maintainer  : vaclav.svejcar@gmail.com
 Stability   : experimental

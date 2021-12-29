@@ -3,7 +3,7 @@
 {-|
 Module      : Main.Vendor
 Description : Details about the application.
-Copyright   : (c) 2020-2021 Vaclav Svejcar
+Copyright   : (c) 2020-2022 Vaclav Svejcar
 License     : BSD-3-Clause
 Maintainer  : vaclav.svejcar@gmail.com
 Stability   : experimental

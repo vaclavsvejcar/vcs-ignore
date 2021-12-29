@@ -13,7 +13,7 @@ homepage:       https://github.com/vaclavsvejcar/vcs-ignore
 bug-reports:    https://github.com/vaclavsvejcar/vcs-ignore/issues
 author:         Vaclav Svejcar
 maintainer:     vaclav.svejcar@gmail.com
-copyright:      Copyright (c) 2020-2021 Vaclav Svejcar
+copyright:      Copyright (c) 2020-2022 Vaclav Svejcar
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
