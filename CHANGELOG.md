@@ -1,7 +1,7 @@
 # Changelog for vcs-ignore
 
 ## v0.0.3.0 (in development)
-- Bump _LTS Haskell_ to `18.26`
+- Bump _LTS Haskell_ to `19.2`
 
 ## v0.0.2.0 (2021-12-29)
 - minor fixes and improvements
