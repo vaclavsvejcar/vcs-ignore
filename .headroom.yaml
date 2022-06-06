@@ -17,6 +17,7 @@ template-paths:
 variables:
   author: Vaclav Svejcar
   email: vaclav.svejcar@gmail.com
+  license: BSD-3-Clause
   year: 2020-2022
 
 license-headers:
@@ -24,7 +25,8 @@ license-headers:
     put-after: ["^{-#"]
     put-before: ["^module"]
     margin-top-code: 1
-    margin-bottom-code: 1
+    line-comment:
+      prefixed-by: ^--
 
 post-process:
   update-copyright:
